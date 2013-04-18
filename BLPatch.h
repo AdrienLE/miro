@@ -14,11 +14,10 @@ public:
     const Vector3 & vertex(int i) const {return m_verts[i];}
 
     virtual void renderGL();
-    virtual bool intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                              float tMin = 0.0f, float tMax = MIRO_TMAX);
 
     virtual ObjType type() const;
 
+    virtual void *selfPtr() { return this; }
 protected:
     Vector3 m_verts[4];
 };

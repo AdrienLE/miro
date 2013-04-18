@@ -16,11 +16,4 @@ BLPatch::renderGL()
 
 }
 
-bool
-BLPatch::intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                   float tMin, float tMax)
-{
-    return false;
-}
-
 ObjType BLPatch::type() const { return BLPATCH; }

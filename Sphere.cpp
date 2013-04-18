@@ -20,7 +20,7 @@ Sphere::renderGL()
     glPopMatrix();
 }
 
-bool Sphere::doIntersect(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
+bool Sphere::doIntersect(std::vector<void *> const &objects, HitInfo& result, const Ray& ray,
                          float tMin, float tMax)
 {
 #ifndef SSE
@@ -51,8 +51,8 @@ bool Sphere::doIntersect(std::vector<Object *> const &objects, HitInfo& result, 
 
         const float discrim = b*b-a4*c; 
 
-        if (discrim < 0) 
-            continue;   // quadratic equation would yield imaginary numbers
+        if (LIKELY(discrim < 0)) 
+	    continue;
 #else
         __m128 b;
         DOTPRODUCT(b, ray2.mm, toO.mm);
@@ -63,15 +63,15 @@ bool Sphere::doIntersect(std::vector<Object *> const &objects, HitInfo& result, 
 
         __m128 discrim_sse = _mm_sub_ss(_mm_mul_ss(b, b), _mm_mul_ss(a4, c));
 
-        if (_mm_testc_si128(_mm_castps_si128(discrim_sse), _mm_castps_si128(signmask)))
-            continue;
+        if (LIKELY(_mm_testc_si128(_mm_castps_si128(discrim_sse), _mm_castps_si128(signmask))))
+	    continue;
 #endif
 
 #ifndef SSE
         const float sqrt_discrim = sqrt(discrim); 
 
-        // solve the quadratic equation
-        const float t[2] = {(-b-sqrt_discrim)/(a2), (-b+sqrt_discrim)/(a2)}; 
+	// solve the quadratic equation
+	const float t[2] = {(-b-sqrt_discrim)/(a2), (-b+sqrt_discrim)/(a2)}; 
 #else
         discrim_sse = _mm_sqrt_ss(discrim_sse);
         b = _mm_xor_ps(b, signmask);
@@ -116,10 +116,4 @@ bool Sphere::doIntersect(std::vector<Object *> const &objects, HitInfo& result, 
 
 ObjType Sphere::type() const { return SPHERE; }
 
-
-bool
-Sphere::intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                     float tMin, float tMax)
-{
-    return doIntersect(objects, result, ray, tMin, tMax);
-}
+void *Sphere::selfPointer() { return this; }

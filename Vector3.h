@@ -12,9 +12,9 @@
 #pragma warning(disable:4244)
 #endif
 
-typedef TVector<3> Vector3v;
+typedef TVector<3> Vector3;
 
-#define Vector3 Vector3
+#define Vector3 Vector3v
 
 class Vector3
 {

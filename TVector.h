@@ -1,7 +1,8 @@
 #pragma once
 
-//#define SSE
+#define SSE
 
+#include <iostream>
 #include <boost/static_assert.hpp>
 #include <boost/utility/enable_if.hpp>
 #include "SSE.h"
@@ -17,11 +18,11 @@
 #endif
 
 // It would be best to have an SSE based sincos, but it's actually pretty complicated.
-#if defined(__GNUC__)
-#define SINCOS(x, s, c) sincosf(x, s, c)
-#else
+//#if defined(__GNUC__)
+//#define SINCOS(x, s, c) sincosf(x, s, c)
+//#else
 #define SINCOS(x, s, c) do { *s = sinf(x); *c = cosf(x); } while (0)
-#endif
+//#endif
 
 #ifdef SSE
 // Xoring this with a vector negates that vector
@@ -42,11 +43,11 @@ public:
         float elems[D];
         struct
         {
-            float x;
-            float y;
-            float z;
-            float w;
-            //typename member_if<D == 4, float>::type w;
+            float _x;
+            float _y;
+            float _z;
+	  //float _w;
+            typename member_if<D == 4, float>::type _w;
         };
     };
 #endif
@@ -60,21 +61,24 @@ public:
 
     TVector(float s)
     {
-        for (int i = 0; i < 3; ++i)
-            elems[i] = s;
-        if (D == 4)
-            elems[3] = 1;
+        for (int i = 0; i < D; ++i)
+            elems[i] = (i == 3 ? 1: s);
     }
 
-    TVector(float x, float y, float z): x(x), y(y), z(z)
+    TVector(float x, float y, float z): _x(x), _y(y), _z(z)
     {
         if (D == 4)
             elems[3] = 1;
     }
 
-    TVector(float x, float y, float z, float w): x(x), y(y), z(z), w(w) {BOOST_STATIC_ASSERT(D==4);}
+    float x() const { return _x; }
+    float y() const { return _y; }
+    float z() const { return _z; }
+    float w() const { return _w; }
 
-    TVector(TVector<D - 1> const &o): x(o.x), y(o.y), z(o.z), w(1) {BOOST_STATIC_ASSERT(D==4);}
+    TVector(float x, float y, float z, float w): _x(x), _y(y), _z(z), w(w) {BOOST_STATIC_ASSERT(D==4);}
+
+    TVector(TVector<D - 1> const &o): _x(o._x), _y(o._y), _z(o._z), w(1) {BOOST_STATIC_ASSERT(D==4);}
 
     TVector<D> &operator=(const TVector<D> &a)
     {
@@ -96,8 +100,8 @@ public:
             elems[i] = a;
     }
 
-    void set(float a, float b, float c) { x = a; y = b; z = c; }
-    void set(float a, float b, float c, float d) { BOOST_STATIC_ASSERT(D==4); x = a; y = b; z = c; w = d; }
+    void set(float a, float b, float c) { _x = a; _y = b; _z = c; }
+    void set(float a, float b, float c, float d) { BOOST_STATIC_ASSERT(D==4); _x = a; _y = b; _z = c; w = d; }
     void set(TVector<D> const &a)
     {
         for (int i = 0; i < D; ++i)
@@ -221,7 +225,7 @@ public:
 
     bool operator==(const TVector<D> &v) const
     {
-        for (int i == 0; i < D; ++i)
+        for (int i = 0; i < D; ++i)
             if (elems[i] != v.elems[i])
                 return false;
         return true;
@@ -229,7 +233,7 @@ public:
 
     bool operator!=(const TVector<D> &v) const
     {
-        for (int i == 0; i < D; ++i)
+        for (int i = 0; i < D; ++i)
             if (elems[i] == v.elems[i])
                 return false;
         return true;
@@ -262,13 +266,14 @@ public:
 
     TVector<D> rotated(float theta, const TVector<D> &w) const
     {
+        BOOST_STATIC_ASSERT(D == 3);
         float c;
         float s;
         SINCOS(theta, &s, &c);
 
-        Vector3 v0 = dot(w) * w;
-        Vector3 v1 = *this - v0;
-        Vector3 v2 = w.cross(v1);
+        TVector<D> v0 = dot(w) * w;
+        TVector<D> v1 = *this - v0;
+        TVector<D> v2 = w.cross(v1);
 
         return v0 + c * v1 + s * v2;
     }
@@ -288,9 +293,9 @@ public:
 
     typename boost::enable_if_c<D == 3, TVector<D> >::type cross(const TVector<D> &w) const
     {
-        return TVector<D>(y * w.z - z * w.y,
-                          z * w.x - x * w.z,
-                          x * w.y - y * w.x);
+        return TVector<D>(_y * w._z - _z * w._y,
+                          _z * w._x - _x * w._z,
+                          _x * w._y - _y * w._x);
     }
 #else
 

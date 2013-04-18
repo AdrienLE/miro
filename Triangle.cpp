@@ -33,10 +33,6 @@ Triangle::renderGL()
 
 
 
-bool
-Triangle::intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& r,float tMin, float tMax)
-{
-    return false;
-}
-
 ObjType Triangle::type() const { return TRIANGLE; }
+
+void *Triangle::selfPointer() { return this; }

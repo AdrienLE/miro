@@ -14,7 +14,9 @@ public:
 
 protected:
     Objects * m_objects;
-    std::vector<Objects> m_categories_objects;
+    std::vector<std::vector<void *> > m_categories_objects;
+    std::vector<bool (*)(std::vector<void *> const &, HitInfo&, const Ray&,
+			 float tMin, float tMax)> m_fcts;
 };
 
 #endif // CSE168_BVH_H_INCLUDED

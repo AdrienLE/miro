@@ -17,18 +17,19 @@ public:
     float radius() const                {return m_radius;}
 
     virtual void renderGL();
-    virtual bool intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                              float tMin = 0.0f, float tMax = MIRO_TMAX);
+
+    static bool doIntersect(std::vector<void *> const &objects, HitInfo& result, const Ray& ray,
+			    float tMin, float tMax);
 
     virtual ObjType type() const;
+
+    virtual void *selfPointer();
 
 protected:
     Vector3 m_center;
     float m_radius;
     float m_radius2;
 
-    static bool Sphere::doIntersect(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                                    float tMin, float tMax);
 };
 
 #endif // CSE168_SPHERE_H_INCLUDED

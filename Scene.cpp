@@ -64,27 +64,27 @@ Scene::raytraceImage(Camera *cam, Image *img)
     time_t t = time(0);
     boost::threadpool::pool threadpool(10);
     std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
-    std::vector<boost::unique_future<std::vector<Vector3 *> > > lines;
+    std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
 
     // loop over all pixels in the image
     for (int j = 0; j < img->height(); ++j)
     {
         tasks.push_back(new boost::packaged_task<std::vector<Vector3 *> >(boost::bind(&Scene::traceLine, this, cam, img, j)));
-        lines.push_back(tasks.back()->get_future());
+        lines.push_back(new boost::unique_future<std::vector<Vector3 *> >(tasks.back()->get_future()));
         boost::threadpool::schedule(threadpool, boost::bind(&boost::packaged_task<std::vector<Vector3 *> >::operator(), tasks.back()));
     }
     for (int j = 0; j < img->height(); ++j)
     {
         for (int i = 0; i < img->width(); ++i)
         {
-            if (lines[j].get()[i])
+            if (lines[j]->get()[i])
             {
-                img->setPixel(i, j, *lines[j].get()[i]);
-                delete lines[j].get()[i];
+                img->setPixel(i, j, *lines[j]->get()[i]);
+                delete lines[j]->get()[i];
             }
         }
         img->drawScanline(j);
-        if (j + 1 == img->height() || !lines[j + 1].has_value())
+        if (j + 1 == img->height() || !lines[j + 1]->has_value())
             glFinish();
         printf("Rendering Progress: %.3f%%\r", j/float(img->height())*100.0f);
         fflush(stdout);

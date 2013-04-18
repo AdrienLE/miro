@@ -1,5 +1,6 @@
 #pragma once
 
+#include <math.h>
 #include <smmintrin.h>
 
 #ifdef SSE4
@@ -13,4 +14,8 @@
 #endif
 
 // TODO later
-#define GSSEALIGN 
+#if defined(__GNUC__) && defined(SSE)
+#define GSSEALIGN __attribute__((aligned(16)))
+#else
+#define GSSEALIGN
+#endif

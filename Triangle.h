@@ -17,10 +17,10 @@ public:
     void setMesh(TriangleMesh* m) {m_mesh = m;}
 
     virtual void renderGL();
-    virtual bool intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                              float tMin = 0.0f, float tMax = MIRO_TMAX);
 
     virtual ObjType type() const;
+
+    virtual void *selfPointer();
     
 protected:
     TriangleMesh* m_mesh;

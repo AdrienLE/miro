@@ -24,11 +24,14 @@ public:
     virtual void renderGL() {}
     virtual void preCalc() {}
 
-    // Intersects a bunch of objects of the same type
-    virtual bool intersectAll(std::vector<Object *> const &objects, HitInfo& result, const Ray& ray,
-                              float tMin = 0.0f, float tMax = MIRO_TMAX) = 0;
+    // Needs a static function that intersects a bunch of objects of the same type
 
     virtual ObjType type() const = 0;
+
+    // This returns a pointer to yourself that can be cast directly into the class:
+    // casting from, say, Object to Sphere involves some computation, so we want to avoid
+    // that.
+    virtual void *selfPointer() = 0;
 
 protected:
     const Material* m_material;
