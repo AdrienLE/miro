@@ -35,12 +35,11 @@ class TVector : public SSEObject
     BOOST_STATIC_ASSERT_MSG(D == 3 || D == 4, "Can only create 3D or 4D vectors");
 
 public:
-#ifdef SSE
-    __m128 mm;
-#else
     union
     {
-        float elems[D];
+#ifdef SSE
+        __m128 mm;
+#else
         struct
         {
             float _x;
@@ -49,8 +48,9 @@ public:
 	  //float _w;
             typename member_if<D == 4, float>::type _w;
         };
-    };
 #endif
+	float elems[D];
+    };
 
 #if !defined(SSE)
     TVector()
@@ -76,9 +76,11 @@ public:
     float z() const { return _z; }
     float w() const { return _w; }
 
-    TVector(float x, float y, float z, float w): _x(x), _y(y), _z(z), w(w) {BOOST_STATIC_ASSERT(D==4);}
+    float operator[](int i) const { return elems[i]; }
 
-    TVector(TVector<D - 1> const &o): _x(o._x), _y(o._y), _z(o._z), w(1) {BOOST_STATIC_ASSERT(D==4);}
+    TVector(float x, float y, float z, float w): _x(x), _y(y), _z(z), _w(w) {BOOST_STATIC_ASSERT(D==4);}
+
+    TVector(TVector<D - 1> const &o): _x(o._x), _y(o._y), _z(o._z), _w(1) {BOOST_STATIC_ASSERT(D==4);}
 
     TVector<D> &operator=(const TVector<D> &a)
     {
@@ -309,10 +311,17 @@ public:
     TVector(__m128 m): mm(m) {}
 
     // Please don't access individual elements, cuz it's bad mckay?
-    float w() const { float r; _mm_store_ss(&r, _mm_shuffle_ps(mm, mm, _MM_SHUFFLE(3, 3, 3, 3))); return r; }
-    float z() const { float r; _mm_store_ss(&r, _mm_shuffle_ps(mm, mm, _MM_SHUFFLE(2, 2, 2, 2))); return r; }
-    float y() const { float r; _mm_store_ss(&r, _mm_shuffle_ps(mm, mm, _MM_SHUFFLE(1, 1, 1, 1))); return r; }
-    float x() const { float r; _mm_store_ss(&r, _mm_shuffle_ps(mm, mm, _MM_SHUFFLE(0, 0, 0, 0))); return r; }
+    float w() const { return (*this)[3]; }
+    float z() const { return (*this)[2]; }
+    float y() const { return (*this)[1]; }
+    float x() const { return (*this)[0]; }
+
+    //float operator[](int i) const { float r; _mm_store_ss(&r, _mm_shuffle_ps(mm, mm, _MM_SHUFFLE(i, i, i, i))); return r; }
+    //float operator[](int i) const { int r = _mm_extract_epi32(_mm_castps_si128(mm), i); return *(float *)&r; }
+    float operator[](int i) const { return elems[i]; }
+
+    // Desperate times call for desperate measures...
+    float &operator[](int i) { return elems[i]; }
 
     void set(float a) { mm = (D == 4? _mm_set_ps1(a): _mm_set_ps(0, a, a, a)); }
     void set(float a, float b, float c) { mm = _mm_set_ps(D == 4, c, b, a); }
@@ -360,7 +369,8 @@ public:
         return PCROSS(mm, b.mm);
     }
 
-#define DOTPRODUCT(r, a, b) do { r = _mm_dp_ps(a, b, D == 3 ? 0x71: 0xf1); } while (0)
+#define LOCATED_DOTPRODUCT(r, a, b, pos) do { r = _mm_dp_ps(a, b, (D == 3 ? 0x70: 0xf0) | pos); } while (0)
+#define DOTPRODUCT(r, a, b) LOCATED_DOTPRODUCT(r, a, b, 1)
 
     // Some help from this: http://stackoverflow.com/questions/4120681/how-to-calculate-vector-dot-product-using-sse-intrinsic-functions-in-c
     float dot(const TVector<D> &b) const

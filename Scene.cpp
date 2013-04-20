@@ -3,7 +3,8 @@
 #include "Camera.h"
 #include "Image.h"
 #include "Console.h"
-#include <time.h>
+
+#include <boost/timer/timer.hpp>
 #include "boost/threadpool.hpp"
 
 Scene * g_scene = 0;
@@ -61,8 +62,8 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
 void
 Scene::raytraceImage(Camera *cam, Image *img)
 {
-    time_t t = time(0);
-    boost::threadpool::pool threadpool(10);
+    boost::timer::auto_cpu_timer t;
+    boost::threadpool::pool threadpool(1);
     std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
     std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
 
@@ -92,7 +93,6 @@ Scene::raytraceImage(Camera *cam, Image *img)
     
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
-    printf("%ds\n", time(0) - t);
 }
 
 bool

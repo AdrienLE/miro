@@ -1,6 +1,6 @@
 MAKE		= make
 AR		= @ar
-CC              = @gcc
+CC              = @g++-4.8
 MV		= @mv
 RM		= @rm -rf
 MKDIR		= @mkdir
@@ -8,13 +8,13 @@ MKDEP		= @mkdep
 ECHO		= @echo
 INCDIRS		= -I/usr/X11R6/include 
 #use the following LIBS line for GNU/Linux
-LIBS	 	= -lm -lX11 -lXmu -lXi -lXext -lGL -lGLU -lglut -lboost_thread-mt -lboost_system-mt -lboost_exception-mt
+LIBS	 	= -lm -lX11 -lXmu -lXi -lXext -lGL -lGLU -lglut -lboost_thread-mt -lboost_system-mt -lboost_exception-mt -lboost_timer-mt
 #use this one instead for Mac OSX
 #LIBS		= -lm -framework GLUT --lobjc -framework OpenGL
 LIBDIRS 	= -L. -L/usr/X11R6/lib
 LDFLAGS		= -O3 $(LIBDIRS) $(LIBS)
-CFLAGS          = $(INCDIRS) -O3 -march=native -fomit-frame-pointer \
--Wno-deprecated -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -ftree-vectorizer-verbose=1 
+CFLAGS          = $(INCDIRS) -march=native -O3 \
+-Wno-deprecated -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE  -g
 
 .SUFFIXES: .cpp .h .d .o
 

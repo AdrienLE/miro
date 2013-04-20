@@ -18,8 +18,8 @@ public:
 
     virtual void renderGL();
 
-    static bool doIntersect(std::vector<void *> const &objects, HitInfo& result, const Ray& ray,
-			    float tMin, float tMax);
+    static bool doIntersect(std::vector<void *> const &objects, HitInfo& result,
+                            const Ray& ray, float tMin, float tMax);
 
     virtual ObjType type() const;
 
@@ -27,9 +27,8 @@ public:
 
 protected:
     Vector3 m_center;
-    float m_radius;
     float m_radius2;
-
+    float m_radius;
 };
 
 #endif // CSE168_SPHERE_H_INCLUDED

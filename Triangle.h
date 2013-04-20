@@ -18,6 +18,9 @@ public:
 
     virtual void renderGL();
 
+    static bool doIntersect(std::vector<void *> const &objects, HitInfo& result,
+                            const Ray& ray, float tMin, float tMax);
+
     virtual ObjType type() const;
 
     virtual void *selfPointer();

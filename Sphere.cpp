@@ -56,12 +56,13 @@ bool Sphere::doIntersect(std::vector<void *> const &objects, HitInfo& result, co
 #else
         __m128 b;
         DOTPRODUCT(b, ray2.mm, toO.mm);
-        __m128 radius2 = _mm_set_ss(s->m_radius2);
+	b = _mm_mul_ss(b, b);
+        __m128 radius2 = _mm_load_ps(&s->m_radius2);
         __m128 c;
         DOTPRODUCT(c, toO.mm, toO.mm);
         c = _mm_sub_ss(c, radius2);
 
-        __m128 discrim_sse = _mm_sub_ss(_mm_mul_ss(b, b), _mm_mul_ss(a4, c));
+        __m128 discrim_sse = _mm_sub_ss(b, _mm_mul_ss(a4, c));
 
         if (LIKELY(_mm_testc_si128(_mm_castps_si128(discrim_sse), _mm_castps_si128(signmask))))
 	    continue;
@@ -74,6 +75,9 @@ bool Sphere::doIntersect(std::vector<void *> const &objects, HitInfo& result, co
 	const float t[2] = {(-b-sqrt_discrim)/(a2), (-b+sqrt_discrim)/(a2)}; 
 #else
         discrim_sse = _mm_sqrt_ss(discrim_sse);
+	// We recompute b but this means that the code generated in the first part of the
+	// loop can be faster (on gcc at least).
+	DOTPRODUCT(b, ray2.mm, toO.mm);
         b = _mm_xor_ps(b, signmask);
         __m128 t0 = _mm_mul_ss(_mm_sub_ss(b, discrim_sse), a2);
         __m128 t1 = _mm_mul_ss(_mm_add_ss(b, discrim_sse), a2);
