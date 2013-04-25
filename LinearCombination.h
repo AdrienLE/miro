@@ -6,7 +6,6 @@
 class LinearCombination : public Material
 {
 public:
-	LinearCombination(std::initializer_list<std::pair<float, Material *> > list) : m_combination(list) {}
 	LinearCombination(std::vector<std::pair<float, Material *> > const &v) : m_combination(v) {}
 	LinearCombination() {}
 
