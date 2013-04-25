@@ -3,18 +3,21 @@
 
 #include "Vector3.h"
 
-class Ray: public SSEObject
+#define MAX_RAY_ITER 15
+
+class Ray
 {
 public:
     Vector3 o,      //!< Origin of ray
             d;      //!< Direction of ray
+    int iter;
 
-    Ray() : o(), d(Vector3(0.0f,0.0f,1.0f))
+    Ray() : o(), d(Vector3(0.0f,0.0f,1.0f)), iter(0)
     {
         // empty
     }
 
-    Ray(const Vector3& o, const Vector3& d) : o(o), d(d)
+    Ray(const Vector3& o, const Vector3& d, int i = 0) : o(o), d(d), iter(i)
     {
         // empty
     }

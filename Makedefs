@@ -13,7 +13,7 @@ LIBS	 	= -lm -lX11 -lXmu -lXi -lXext -lGL -lGLU -lglut -lboost_thread-mt -lboost
 #LIBS		= -lm -framework GLUT --lobjc -framework OpenGL
 LIBDIRS 	= -L. -L/usr/X11R6/lib
 LDFLAGS		= -O3 $(LIBDIRS) $(LIBS)
-CFLAGS          = $(INCDIRS) -march=native -O3 \
+CFLAGS          = $(INCDIRS) -march=native -O3 -std=c++11 \
 -Wno-deprecated -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE  -g
 
 .SUFFIXES: .cpp .h .d .o

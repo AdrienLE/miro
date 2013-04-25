@@ -16,4 +16,9 @@ public:
                           const Scene& scene) const;
 };
 
+// The distinction is being made because specular materials
+// will typically be wrappers around a diffuse material
+class DiffuseMaterial : public Material {};
+class SpecularMaterial : public Material {};
+
 #endif // CSE168_MATERIAL_H_INCLUDED

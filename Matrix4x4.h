@@ -580,9 +580,9 @@ operator*(const Matrix4x4& A, const Vector4& u)
 inline Vector3
 operator*(const Matrix4x4& A, const Vector3& u)
 {
-    return Vector3(A.m11*u.x() + A.m12*u.y() + A.m13*u.z() + A.m14,
-                   A.m21*u.x() + A.m22*u.y() + A.m23*u.z() + A.m24,
-                   A.m31*u.x() + A.m32*u.y() + A.m33*u.z() + A.m34);
+    return Vector3(A.m11*u.x + A.m12*u.y + A.m13*u.z + A.m14,
+                   A.m21*u.x + A.m22*u.y + A.m23*u.z + A.m24,
+                   A.m31*u.x + A.m32*u.y + A.m33*u.z + A.m34);
     // note that this ignores the fourth row in the matrix!
 }
 

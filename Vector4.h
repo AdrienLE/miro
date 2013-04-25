@@ -27,7 +27,7 @@ public:
     Vector4(float x, float y, float z, float w) :
         x(x), y(y), z(z), w(w) {}
 
-    Vector4(const Vector3& v) : x(v.x()), y(v.y()), z(v.z()), w(1) {}
+    Vector4(const Vector3& v) : x(v.x), y(v.y), z(v.z), w(1) {}
 
 
     //! Assignment operator.

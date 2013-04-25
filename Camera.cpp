@@ -68,7 +68,7 @@ void
 Camera::calcLookAt()
 {
     // this is true when a "lookat" is not used in the config file
-    if (m_lookAt.x() != FLT_MAX)
+    if (m_lookAt.x != FLT_MAX)
     {
         setLookAt(m_lookAt);
         m_lookAt.set(FLT_MAX, FLT_MAX, FLT_MAX);
@@ -88,9 +88,9 @@ Camera::drawGL()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     Vector3 vCenter = eye() + viewDir();
-    gluLookAt(eye().x(), eye().y(), eye().z(),
-              vCenter.x(), vCenter.y(), vCenter.z(),
-              up().x(), up().y(), up().z());
+    gluLookAt(eye().x, eye().y, eye().z,
+              vCenter.x, vCenter.y, vCenter.z,
+              up().x, up().y, up().z);
 }
 
 

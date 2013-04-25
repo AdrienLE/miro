@@ -7,7 +7,7 @@
     The Triangle class stores a pointer to a mesh and an index into its
     triangle array. The mesh stores all data needed by this Triangle.
 */
-class Triangle : public Object, public SSEObject
+class Triangle : public Object
 {
 public:
     Triangle(TriangleMesh * m = 0, unsigned int i = 0);
@@ -18,13 +18,11 @@ public:
 
     virtual void renderGL();
 
-    static bool doIntersect(std::vector<void *> const &objects, HitInfo& result,
-                            const Ray& ray, float tMin, float tMax);
+    static bool doIntersect(std::vector<void *> const &, HitInfo &, const Ray &, float, float);
 
-    virtual ObjType type() const;
+    virtual ObjType type() const { return TRIANGLE; }
+    virtual void *ptr() { return this; }
 
-    virtual void *selfPointer();
-    
 protected:
     TriangleMesh* m_mesh;
     unsigned int m_index;

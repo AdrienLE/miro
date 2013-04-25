@@ -2,8 +2,8 @@
 #include "Ray.h"
 #include "Scene.h"
 
-Lambert::Lambert(const Vector3 & kd, const Vector3 & ka) :
-    m_kd(kd), m_ka(ka)
+Lambert::Lambert(const Vector3 & kd) :
+    m_kd(kd)
 {
 
 }
@@ -26,8 +26,16 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     for (lightIter = lightlist->begin(); lightIter != lightlist->end(); lightIter++)
     {
         PointLight* pLight = *lightIter;
-    
+
         Vector3 l = pLight->position() - hit.P;
+
+        Ray lightray;
+        lightray.d = l.normalized();
+        lightray.o = hit.P;
+        HitInfo lighthit;
+
+        if (scene.trace(lighthit, lightray, EPSILON, l.length()))
+            continue;
         
         // the inverse-squared falloff
         float falloff = l.length2();
@@ -42,9 +50,5 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         
         L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result;
     }
-    
-    // add the ambient component
-    L += m_ka;
-    
     return L;
 }

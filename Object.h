@@ -13,6 +13,8 @@ enum ObjType
     NB_OBJS
 };
 
+class ObjBundle;
+
 class Object
 {
 public:
@@ -28,10 +30,7 @@ public:
 
     virtual ObjType type() const = 0;
 
-    // This returns a pointer to yourself that can be cast directly into the class:
-    // casting from, say, Object to Sphere involves some computation, so we want to avoid
-    // that.
-    virtual void *selfPointer() = 0;
+    virtual void *ptr() = 0;
 
 protected:
     const Material* m_material;

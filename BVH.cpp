@@ -13,11 +13,11 @@ BVH::build(Objects * objs)
     m_categories_objects.resize(NB_OBJS);
     for (size_t i = 0; i < m_objects->size(); ++i)
     {
-        m_categories_objects[(*m_objects)[i]->type()].push_back((*m_objects)[i]->selfPointer());
+        m_categories_objects[(*m_objects)[i]->type()].push_back((*m_objects)[i]->ptr());
     }
     m_fcts.resize(NB_OBJS);
-    m_fcts[SPHERE] = Sphere::doIntersect;
-    m_fcts[TRIANGLE] = Triangle::doIntersect;
+    m_fcts[TRIANGLE] = &Triangle::doIntersect;
+    m_fcts[SPHERE] = &Sphere::doIntersect;
 }
 
 
@@ -35,11 +35,10 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
     {
         if (m_categories_objects[i].size() > 0)
         {
-            if (m_fcts[i](m_categories_objects[i], tempMinHit, ray, tMin, tMax))
+            if (m_fcts[i](m_categories_objects[i], tempMinHit, ray, tMin, tMax) && tempMinHit.t < minHit.t)
             {
+                minHit = tempMinHit;
                 hit = true;
-                if (tempMinHit.t < minHit.t)
-                    minHit = tempMinHit;
             }
         }
     }

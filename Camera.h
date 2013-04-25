@@ -5,7 +5,7 @@
 #include "Miro.h"
 #include "Ray.h"
 
-class Camera : public SSEObject
+class Camera
 {
 public:
     Camera();

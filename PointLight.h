@@ -4,7 +4,7 @@
 #include <vector>
 #include "Vector3.h"
 
-class PointLight : public SSEObject
+class PointLight
 {
 public:
     void setPosition(const Vector3& v)  {m_position = v;}

@@ -9,7 +9,7 @@
 class Camera;
 class Image;
 
-class Scene : public SSEObject
+class Scene
 {
 public:
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}

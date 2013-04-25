@@ -106,7 +106,7 @@ makeLorenzScene()
         Sphere * sphere = new Sphere;
         sphere->setCenter(Vector3(x,y,z));
         sphere->setRadius(0.005 * t);
-        sphere->setMaterial(new Lambert(Vector3((i % 100) / 100.0, 0.5 * (i % 30) / 30.0, ((i % 20) / 20.0)), Vector3(0.2, 0.2, 0.2)));
+        sphere->setMaterial(new Lambert(Vector3((i % 100) / 100.0, 0.5 * (i % 30) / 30.0, ((i % 20) / 20.0))));
         g_scene->addObject(sphere);
         if (x > minx)
             minx = x;
@@ -125,7 +125,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-    makeBunnyScene();
+    makeTeapotScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();

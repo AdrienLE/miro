@@ -4,7 +4,7 @@
 #include "Vector3.h"
 #include "Object.h"
 
-class BLPatch : public Object, public SSEObject
+class BLPatch : public Object
 {
 public:
     BLPatch();
