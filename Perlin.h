@@ -2,6 +2,7 @@
 #define CSE168_PERLIN_H_INCLUDED
 
 #include <math.h>
+#include "Vector3.h"
 
 //! Perlin noise class
 /*!
@@ -37,6 +38,16 @@ public:
                                      grad(p[BA+1], x-1, y  , z-1 )),
                              lerp(u, grad(p[AB+1], x  , y-1, z-1 ),
                                      grad(p[BB+1], x-1, y-1, z-1 ))));
+   }
+   static float turbulence(const Vector3& pos, int freq)
+   {
+	   float turb = 0;
+
+	   for (int i = 1; i <= freq; i++)
+	   {
+		   turb += noise(pos.x * i, pos.y * i, pos.z * i) / i;
+	   }
+	   return turb;
    }
 
 private:

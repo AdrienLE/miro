@@ -9,10 +9,12 @@
 #include "PointLight.h"
 #include "TriangleMesh.h"
 #include "Triangle.h"
+#include "Sphere.h"
 #include "Lambert.h"
 #include "SimpleReflection.h"
 #include "Ambient.h"
 #include "LinearCombination.h"
+#include "CellularStoneTexture.h"
 
 void
 makeBunnyScene()
@@ -193,6 +195,65 @@ makeSphereScene()
     t->setMesh(floor);
     t->setMaterial(mat); 
     g_scene->addObject(t);
+    
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
+
+void
+makeTextureScene()
+{
+    g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(800, 800);
+    
+    // set up the camera
+    g_camera->setBGColor(Vector3(0.8f, 0.8f, 1.0f));
+    g_camera->setEye(Vector3(-1, 10, 10));
+    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(-6, 12, 3));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(400);
+    g_scene->addLight(light);
+
+	Material* ambient = new Ambient(1);
+    Material* stone = new Lambert(new CellularStoneTexture(Vector3(.5f, .0f, .2f)));
+	std::vector<std::pair<float, Material *> > combination;
+    combination.push_back(std::make_pair(0.8f, stone));
+    combination.push_back(std::make_pair(0.2f, ambient));
+    Material* mat = new LinearCombination(combination);
+
+
+	//Material* mat = new CellularStoneTexture(Vector3(.5f, .0f, .2f));
+
+    // create the floor triangle
+    TriangleMesh * floor = new TriangleMesh;
+    floor->createSingleTriangle();
+    floor->setV1(Vector3(  0, 0,  10));
+    floor->setV2(Vector3( 10, 0, -10));
+    floor->setV3(Vector3(-10, 0, -10));
+    floor->setN1(Vector3(0, 1, 0));
+    floor->setN2(Vector3(0, 1, 0));
+    floor->setN3(Vector3(0, 1, 0));
+    
+    Triangle* t = new Triangle;
+    t->setIndex(0);
+    t->setMesh(floor);
+    t->setMaterial(mat); 
+    g_scene->addObject(t);
+
+	Sphere* sphere = new Sphere();
+    sphere->setMaterial(mat);
+	sphere->setCenter(Vector3(0, 0, 0));
+	sphere->setRadius(4);
+    g_scene->addObject(sphere);
     
     // let objects do pre-calculations if needed
     g_scene->preCalc();

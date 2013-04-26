@@ -1,6 +1,6 @@
 #include "Material.h"
 
-Material::Material()
+Material::Material(const Vector3& color) : m_color(color)
 {
 }
 
@@ -11,5 +11,5 @@ Material::~Material()
 Vector3
 Material::shade(const Ray&, const HitInfo&, const Scene&) const
 {
-    return Vector3(1.0f, 1.0f, 1.0f);
+    return m_color;
 }

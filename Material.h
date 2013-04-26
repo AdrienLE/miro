@@ -7,13 +7,16 @@
 class Material
 {
 public:
-    Material();
+    Material(const Vector3& color = Vector3(1.0f, 1.0f, 1.0f));
     virtual ~Material();
 
     virtual void preCalc() {}
     
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
+
+protected:
+	Vector3 m_color;
 };
 
 // The distinction is being made because specular materials

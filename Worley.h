@@ -17,7 +17,7 @@
 #ifndef CSE168_WORLEY_H_INCLUDED
 #define CSE168_WORLEY_H_INCLUDED
 
-
+#include "Vector3.h"
 
 //! Worley noise class
 /*!
@@ -50,6 +50,10 @@
 class WorleyNoise
 {
 public:
+	static float EuclidianDistanceFunc(Vector3 p1, Vector3 p2)
+	{
+		return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z);
+	}
     // 1D
     static void noise1D(float at, long maxOrder,
                 float *F, float (*delta), unsigned long *ID);

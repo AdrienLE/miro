@@ -2,14 +2,18 @@
 #include "Ray.h"
 #include "Scene.h"
 
-Lambert::Lambert(const Vector3 & kd) :
-    m_kd(kd)
+Lambert::Lambert(const Vector3 & color)
 {
+	m_kd = new Material(color);
+}
 
+Lambert::Lambert(Material* kd) : m_kd(kd)
+{
 }
 
 Lambert::~Lambert()
 {
+	delete m_kd;
 }
 
 Vector3
@@ -46,7 +50,7 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         // get the diffuse component
         float nDotL = dot(hit.N, l);
         Vector3 result = pLight->color();
-        result *= m_kd;
+		result *= m_kd->shade(ray, hit, scene);
         
         L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result;
     }

@@ -1,3 +1,4 @@
 void makeBunnyScene();
 void makeSphereScene();
 void makeTeapotScene();
+void makeTextureScene();
