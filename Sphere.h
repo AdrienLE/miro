@@ -3,6 +3,7 @@
 
 #include "Vector3.h"
 #include "Object.h"
+#include "IntersectObjects.h"
 
 class Sphere : public Object
 {
@@ -17,8 +18,8 @@ public:
     float radius() const                {return m_radius;}
 
     virtual void renderGL();
-    static bool doIntersect(std::vector<void *> const &objs, HitInfo& result, const Ray& ray,
-                           float tMin = 0.0f, float tMax = MIRO_TMAX);
+    static bool doIntersect(IntersectObjects const &objects, HitInfo& result, const Ray& ray,
+                            float tMin = 0.0f, float tMax = MIRO_TMAX);
 
     virtual ObjType type() const { return SPHERE; }
     virtual void *ptr() { return this; }

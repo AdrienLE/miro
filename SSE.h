@@ -3,10 +3,6 @@
 #include <math.h>
 #include <smmintrin.h>
 
-#ifdef SSE4
-#define SSE
-#endif
-
 #if defined(WIN32) && defined(SSE)
 #define WSSEALIGN __declspec( align( 16 ) )
 #else
@@ -19,3 +15,16 @@
 #else
 #define GSSEALIGN
 #endif
+
+class SSE
+{
+public:
+    SSE();
+
+    bool hasSSE() const { return m_hasSSE; }
+
+private:
+    bool m_hasSSE;
+};
+
+extern SSE sse_info;

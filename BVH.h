@@ -3,6 +3,7 @@
 
 #include "Miro.h"
 #include "Object.h"
+#include "IntersectObjects.h"
 
 class BVH
 {
@@ -14,10 +15,10 @@ public:
 
 protected:
     Objects * m_objects;
-    std::vector<std::vector<void *> > m_categories_objects;
-    typedef bool (*Intersect)(std::vector<void *> const &objects, HitInfo& result,
+    std::vector<IntersectObjects> m_categories_objects;
+    typedef bool (*Intersect)(IntersectObjects const &objects, HitInfo& result,
                               const Ray& ray, float tMin, float tMax);
-    std::vector<Intersect> m_fcts;
+    std::vector<Intersect> m_intersect_fcts;
 };
 
 #endif // CSE168_BVH_H_INCLUDED

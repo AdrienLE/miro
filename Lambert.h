@@ -6,8 +6,8 @@
 class Lambert : public DiffuseMaterial
 {
 public:
-    Lambert(const Vector3 & color = Vector3(1));
-	Lambert(Material* kd);
+    Lambert(const Vector3 & color = Vector3(1), const Vector3 &ambient = Vector3(0));
+	Lambert(shared_ptr<Material> kd, const Vector3 &ambient = Vector3(0));
     virtual ~Lambert();
 
     virtual void preCalc() {}
@@ -15,7 +15,8 @@ public:
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
 protected:
-    Material* m_kd;
+    shared_ptr<Material> m_kd;
+    Vector3 m_ka;
 };
 
 #endif // CSE168_LAMBERT_H_INCLUDED

@@ -1,6 +1,10 @@
 #ifndef __MIRO_H__
 #define __MIRO_H__
 
+#include <boost/shared_ptr.hpp>
+
+using boost::shared_ptr;
+
 // #ifndef max
 // #define max(a,b) ((a>b)?a:b)
 // #endif

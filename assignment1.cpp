@@ -12,7 +12,6 @@
 #include "Sphere.h"
 #include "Lambert.h"
 #include "SimpleReflection.h"
-#include "Ambient.h"
 #include "LinearCombination.h"
 #include "CellularStoneTexture.h"
 
@@ -97,14 +96,12 @@ makeTeapotScene()
     light->setWattage(500);
     g_scene->addLight(light);
 
-    Material* diffuse = new Lambert(Vector3(0.f, 0.f, 1.f));
+    Material* diffuse = new Lambert(Vector3(0.f, 0.f, 1.f), 0.3);
     Material* diffuse2 = new Lambert(Vector3(1.f, 0.f, 0.f));
     Material* specular = new SimpleReflection();
-    Material* ambient = new Ambient(0.1);
     std::vector<std::pair<float, Material *> > combination;
     combination.push_back(std::make_pair(0.4f, diffuse));
     combination.push_back(std::make_pair(0.5f, specular));
-    combination.push_back(std::make_pair(0.1f, ambient));
     Material* mat = new LinearCombination(combination);
     combination[0] = std::make_pair(0.4f, diffuse2);
     Material* mat2 = new LinearCombination(combination);
@@ -220,16 +217,10 @@ makeTextureScene()
     PointLight * light = new PointLight;
     light->setPosition(Vector3(-6, 12, 3));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(400);
+    light->setWattage(300);
     g_scene->addLight(light);
 
-	Material* ambient = new Ambient(1);
-    Material* stone = new Lambert(new CellularStoneTexture());
-	std::vector<std::pair<float, Material *> > combination;
-    combination.push_back(std::make_pair(0.9f, stone));
-    combination.push_back(std::make_pair(0.1f, ambient));
-    Material* mat = new LinearCombination(combination);
-
+    Material* mat = new Lambert(shared_ptr<Material>(new CellularStoneTexture()), 0.1);
 
 	//Material* mat = new CellularStoneTexture(Vector3(.5f, .0f, .2f));
 
@@ -252,7 +243,7 @@ makeTextureScene()
 	Sphere* sphere = new Sphere();
     sphere->setMaterial(mat);
 	sphere->setCenter(Vector3(0, 0, 0));
-	sphere->setRadius(4);
+	sphere->setRadius(2);
     g_scene->addObject(sphere);
     
 	sphere = new Sphere();

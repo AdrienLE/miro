@@ -2,6 +2,7 @@
 #define CSE168_TRIANGLE_H_INCLUDED
 
 #include "Object.h"
+#include "SSEObject.h"
 
 /*
     The Triangle class stores a pointer to a mesh and an index into its
@@ -18,14 +19,22 @@ public:
 
     virtual void renderGL();
 
-    static bool doIntersect(std::vector<void *> const &, HitInfo &, const Ray &, float, float);
+    static bool doIntersect(IntersectObjects const &objects, HitInfo &, const Ray &, float, float);
 
     virtual ObjType type() const { return TRIANGLE; }
     virtual void *ptr() { return this; }
+    static SSEObject * preProcess( std::vector<void *> &objects );
 
 protected:
     TriangleMesh* m_mesh;
     unsigned int m_index;
+
+    struct SSETriangles : public SSEObject
+    {
+        SSEVector4 a, b, c;
+        Triangle *tri;
+        int j;
+    };
 };
 
 #endif // CSE168_TRIANGLE_H_INCLUDED

@@ -30,14 +30,14 @@ Triangle::renderGL()
     glEnd();
 }
 
-bool Triangle::doIntersect(std::vector<void *> const &objects, HitInfo& result,
+bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
                            const Ray& ray, float tMin, float tMax)
 {
     bool hit = false;
     Vector3 md = -ray.d;
-    for (int i = 0; i < objects.size(); ++i)
+    for (int i = 0; i < objects.plain.size(); ++i)
     {
-        Triangle *tri = (Triangle *)objects[i];
+        Triangle *tri = (Triangle *)objects.plain[i];
         Vector3 *vs = tri->m_mesh->vertices();
         Vector3 *ns = tri->m_mesh->normals();
         TriangleMesh::TupleI3 *vi = tri->m_mesh->vIndices();
@@ -71,6 +71,13 @@ bool Triangle::doIntersect(std::vector<void *> const &objects, HitInfo& result,
     }
     return hit;
 }
+
+SSEObject * Triangle::preProcess( std::vector<void *> &objects )
+{
+    SSETriangles *triangles = new SSETriangles;
+    return NULL;
+}
+
 
 // bool Triangle::doIntersect(std::vector<void *> const &objects, HitInfo& result,
 //                            const Ray& ray, float tMin, float tMax)

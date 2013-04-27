@@ -4,6 +4,7 @@
 #include <vector>
 #include "Miro.h"
 #include "Material.h"
+#include "IntersectObjects.h"
 
 enum ObjType
 {
