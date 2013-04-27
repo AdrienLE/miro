@@ -11,3 +11,13 @@ Miro.exe
 *.trace
 callgrind*
 .DS_Store
+*.tlog
+*.opensdf
+*.sln
+*.psess
+*.sdf
+*.suo
+*.vcxproj*
+*.vspx
+ipch
+x64
