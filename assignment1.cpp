@@ -224,10 +224,10 @@ makeTextureScene()
     g_scene->addLight(light);
 
 	Material* ambient = new Ambient(1);
-    Material* stone = new Lambert(new CellularStoneTexture(Vector3(.5f, .0f, .2f)));
+    Material* stone = new Lambert(new CellularStoneTexture());
 	std::vector<std::pair<float, Material *> > combination;
-    combination.push_back(std::make_pair(0.8f, stone));
-    combination.push_back(std::make_pair(0.2f, ambient));
+    combination.push_back(std::make_pair(0.9f, stone));
+    combination.push_back(std::make_pair(0.1f, ambient));
     Material* mat = new LinearCombination(combination);
 
 
@@ -255,6 +255,12 @@ makeTextureScene()
 	sphere->setRadius(4);
     g_scene->addObject(sphere);
     
+	sphere = new Sphere();
+    sphere->setMaterial(mat);
+	sphere->setCenter(Vector3(4, 0, 0));
+	sphere->setRadius(2);
+    g_scene->addObject(sphere);
+
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 }

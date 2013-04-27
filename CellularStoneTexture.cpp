@@ -3,67 +3,51 @@
 #include "Scene.h"
 #include "Perlin.h"
 #include "Worley.h"
+#include <algorithm>
 
-CellularStoneTexture::CellularStoneTexture(const Vector3 & color) : m_color(color)
+CellularStoneTexture::CellularStoneTexture(float tile_size, float sep_size, const Vector3& sep_color)
 {
-	preCalc();
+	m_tile_size = 1.0f / tile_size;
+	m_sep_delta = sep_size;
+	m_tiles_colors.push_back(Vector3(0.6, 0.35, 0.19));
+	m_tiles_colors.push_back(Vector3(0.68, 0.41, 0.21));
+	m_tiles_colors.push_back(Vector3(0.82, 0.49, 0.35));
+	m_tiles_colors.push_back(Vector3(0.5, 0.33, 0.16));
+	m_tiles_colors.push_back(Vector3(0.42, 0.23, 0.14));
+	m_sep_color = sep_color;
 }
 
 CellularStoneTexture::~CellularStoneTexture()
 {
 }
 
-void
-CellularStoneTexture::preCalc()
-{
-	
-}
-
 Vector3 
 CellularStoneTexture::getTextureColorAt(const Vector3& pos) const
 {
-	Vector3 color(0);
+	Vector3 color(m_sep_color);
 	Vector3 npos(pos);
 
-	Vector3 slateGray(112/255., 128/255., 144/255.);
-	Vector3 lightBlue(104/255., 131/255., 139/255.);
-	Vector3 darkWood(.52, 94/255., 66/255.);
-	Vector3 lightSteelBlue(.33, .33, .33);
-	Vector3 colors[] = { slateGray, lightBlue, darkWood, lightSteelBlue };
+	float at[] = {npos.x * m_tile_size, npos.y * m_tile_size, npos.z * m_tile_size};
+	float F[m_max_order];
+	float delta[m_max_order][3];
+	unsigned long ID[m_max_order];
+	float noise_scale = 0.2f;
+	float p_noise = 0;
 
-	const int max_order = 3;
-	float scale = 1;
-	float at[] = {npos.x, npos.y, npos.z};
-	float F[max_order];
-	float delta[max_order][3];
-	unsigned long ID[max_order];
-	float sep_delta = 0.05f;
-
-	WorleyNoise::noise3D(at, max_order, F, delta, ID); 
-	if(F[2] - F[1] < -sep_delta || F[2] - F[1] > sep_delta) 
+	WorleyNoise::noise3D(at, m_max_order, F, delta, ID); 
+	if(F[2] - F[1] < -m_sep_delta || F[2] - F[1] > m_sep_delta) 
 	{
-		int temp = ID[1] % 4;
-		int temp2 = ID[0] % 4;
-		
-
-		//float noiseX = PerlinNoise::noise(npos[0] * scale, 
-		//								  npos[1] * scale, 
-		//								  npos[2] * scale);
-		//float noiseY = PerlinNoise::noise(npos[1] * scale, 
-		//							      npos[2] * scale, 
-		//								  npos[0] * scale);
-		//float noiseZ = PerlinNoise::noise(npos[2] * scale, 
-		//								  npos[0] * scale, 
-		//								  npos[1] * scale);
-		//interpolate the bumps using a predefined scale
-		//float bumpScale = .4;
-		//pNorm.x = (1 - bumpScale) * normal.x + bumpScale * noiseX;
-		//pNorm.y = (1 - bumpScale) * normal.y + bumpScale * noiseY;
-		//pNorm.z = (1 - bumpScale) * normal.z + bumpScale * noiseZ;
-
-		color = colors[temp] + colors[temp2];
+		color = m_tiles_colors[ID[1] % m_tiles_colors.size()] + m_tiles_colors[ID[0] % m_tiles_colors.size()];
+		npos *= 6;
+		noise_scale = 0.05;
+		p_noise = (PerlinNoise::noise(npos.x, npos.y, npos.z));
 	}
-
+	else
+	{
+		npos *= 18;
+		p_noise = (PerlinNoise::noise(npos.x, npos.y, npos.z)) + 0.6;	
+	}
+	color = (1.0f - noise_scale) * color + noise_scale * p_noise;
 	return color;
 }
 
