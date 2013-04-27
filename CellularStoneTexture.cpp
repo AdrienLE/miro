@@ -30,7 +30,7 @@ CellularStoneTexture::getTextureColorAt(const Vector3& pos) const
 	float at[] = {npos.x * m_tile_size, npos.y * m_tile_size, npos.z * m_tile_size};
 	float F[m_max_order];
 	float delta[m_max_order][3];
-	unsigned long ID[m_max_order];
+	unsigned int ID[m_max_order];
 	float noise_scale = 0.2f;
 	float p_noise = 0;
 

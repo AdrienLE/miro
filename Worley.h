@@ -55,16 +55,16 @@ public:
 		return (p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y) + (p1.z - p2.z) * (p1.z - p2.z);
 	}
     // 1D
-    static void noise1D(float at, long maxOrder,
-                float *F, float (*delta), unsigned long *ID);
+    static void noise1D(float at, int maxOrder,
+                float *F, float (*delta), unsigned int *ID);
     
     // 2D
-    static void noise2D(float at[2], long maxOrder,
-                float *F, float (*delta)[2], unsigned long *ID);
+    static void noise2D(float at[2], int maxOrder,
+                float *F, float (*delta)[2], unsigned int *ID);
     
     // 3D
-    static void noise3D(float at[3], long maxOrder,
-                float *F, float (*delta)[3], unsigned long *ID); 
+    static void noise3D(float at[3], int maxOrder,
+                float *F, float (*delta)[3], unsigned int *ID); 
 };
 
 #endif // CSE168_WORLEY_H_INCLUDED

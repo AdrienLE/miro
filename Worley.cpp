@@ -10,7 +10,7 @@ namespace
 // points should be in each spatial cube. We use a table so we don't
 // need to make multiple slower tests.  A random number indexed into
 // this array will give an approximate Poisson distribution of mean
-// density 2.5. Read the book for the longwinded explanation.
+// density 2.5. Read the book for the intwinded explanation.
     static int poissonCount[256] =
     {
         4,3,1,1,1,2,4,2,2,2,5,1,0,2,1,2,2,0,4,3,2,1,2,1,3,2,2,4,2,2,5,1,2,3,2,2,2,2,2,3,
@@ -28,22 +28,22 @@ namespace
 
 // the function to merge-sort a "cube" of samples into the current best-found
 // list of values.
-    void addSamples(long xi, long maxOrder,
-                    float at, float *F, float(*delta), unsigned long *ID);
-    void addSamples(long xi, long yi, long maxOrder,
-                    float at[2], float *F, float(*delta)[2], unsigned long *ID);
-    void addSamples(long xi, long yi, long zi, long maxOrder,
-                    float at[3], float *F, float(*delta)[3], unsigned long *ID);
+    void addSamples(int xi, int maxOrder,
+                    float at, float *F, float(*delta), unsigned int *ID);
+    void addSamples(int xi, int yi, int maxOrder,
+                    float at[2], float *F, float(*delta)[2], unsigned int *ID);
+    void addSamples(int xi, int yi, int zi, int maxOrder,
+                    float at[3], float *F, float(*delta)[3], unsigned int *ID);
 } // namespace
 
 
 void
-WorleyNoise::noise1D(float at, long maxOrder,
-                     float *F, float(*delta), unsigned long *ID)
+WorleyNoise::noise1D(float at, int maxOrder,
+                     float *F, float(*delta), unsigned int *ID)
 {
     float x2, mx2;
     float newAt;
-    long intAt, i;
+    int intAt, i;
 
     // Initialize the F values to "huge" so they will be replaced by the
     // first real sample tests. Note we'll be storing and comparing the
@@ -60,7 +60,7 @@ WorleyNoise::noise1D(float at, long maxOrder,
     // A simple way to compute the closest neighbors would be to test all
     // boundary cubes exhaustively. This is simple with code like:
     // {
-    //     long ii, jj, kk;
+    //     int ii, jj, kk;
     //     for (ii=-1; ii<=1; ii++)
     //     addSamples(intAt+ii, maxOrder, newAt, F, delta, ID);
     // }
@@ -93,12 +93,12 @@ WorleyNoise::noise1D(float at, long maxOrder,
 
 
 void
-WorleyNoise::noise2D(float at[2], long maxOrder,
-                     float *F, float(*delta)[2], unsigned long *ID)
+WorleyNoise::noise2D(float at[2], int maxOrder,
+                     float *F, float(*delta)[2], unsigned int *ID)
 {
     float x2, y2, mx2, my2;
     float newAt[2];
-    long intAt[2], i;
+    int intAt[2], i;
 
     // Initialize the F values to "huge" so they will be replaced by the
     // first real sample tests. Note we'll be storing and comparing the
@@ -117,7 +117,7 @@ WorleyNoise::noise2D(float at[2], long maxOrder,
     // A simple way to compute the closest neighbors would be to test all
     // boundary cubes exhaustively. This is simple with code like:
     // {
-    //     long ii, jj, kk;
+    //     int ii, jj, kk;
     //     for (ii=-1; ii<=1; ii++) for (jj=-1; jj<=1; jj++)
     //     addSamples(intAt[0]+ii, intAt[1]+jj, maxOrder, newAt, F, delta, ID);
     // }
@@ -172,12 +172,12 @@ WorleyNoise::noise2D(float at[2], long maxOrder,
 
 
 void
-WorleyNoise::noise3D(float at[3], long maxOrder,
-                     float *F, float(*delta)[3], unsigned long *ID)
+WorleyNoise::noise3D(float at[3], int maxOrder,
+                     float *F, float(*delta)[3], unsigned int *ID)
 {
     float x2, y2, z2, mx2, my2, mz2;
     float newAt[3];
-    long intAt[3], i;
+    int intAt[3], i;
 
     // Initialize the F values to "huge" so they will be replaced by the
     // first real sample tests. Note we'll be storing and comparing the
@@ -198,7 +198,7 @@ WorleyNoise::noise3D(float at[3], long maxOrder,
     // A simple way to compute the closest neighbors would be to test all
     // boundary cubes exhaustively. This is simple with code like:
     // {
-    //     long ii, jj, kk;
+    //     int ii, jj, kk;
     //     for (ii=-1; ii<=1; ii++) for (jj=-1; jj<=1; jj++) for (kk=-1; kk<=1; kk++)
     //     addSamples(intAt[0]+ii,intAt[1]+jj,intAt[2]+kk,
     //     maxOrder, newAt, F, delta, ID);
@@ -303,11 +303,11 @@ namespace
 {
 
 void
-addSamples(long xi, long maxOrder, float at, float *F, float(*delta), unsigned long *ID)
+addSamples(int xi, int maxOrder, float at, float *F, float(*delta), unsigned int *ID)
 {
     float dx, fx, d2;
-    long count, i, j, index;
-    unsigned long seed, this_id;
+    int count, i, j, index;
+    unsigned int seed, this_id;
 
     // Each cube has a random number seed based on the cube's ID number.
     // The seed might be better if it were a nonlinear hash like Perlin uses
@@ -363,12 +363,12 @@ addSamples(long xi, long maxOrder, float at, float *F, float(*delta), unsigned l
 }
 
 void
-addSamples(long xi, long yi, long maxOrder,
-           float at[2], float *F, float(*delta)[2], unsigned long *ID)
+addSamples(int xi, int yi, int maxOrder,
+           float at[2], float *F, float(*delta)[2], unsigned int *ID)
 {
     float dx, dy, fx, fy, d2;
-    long count, i, j, index;
-    unsigned long seed, this_id;
+    int count, i, j, index;
+    unsigned int seed, this_id;
 
     // Each cube has a random number seed based on the cube's ID number.
     // The seed might be better if it were a nonlinear hash like Perlin uses
@@ -429,12 +429,12 @@ addSamples(long xi, long yi, long maxOrder,
 }
 
 void
-addSamples(long xi, long yi, long zi, long maxOrder,
-           float at[3], float *F, float(*delta)[3], unsigned long *ID)
+addSamples(int xi, int yi, int zi, int maxOrder,
+           float at[3], float *F, float(*delta)[3], unsigned int *ID)
 {
     float dx, dy, dz, fx, fy, fz, d2;
-    long count, i, j, index;
-    unsigned long seed, this_id;
+    int count, i, j, index;
+    unsigned int seed, this_id;
 
     // Each cube has a random number seed based on the cube's ID number.
     // The seed might be better if it were a nonlinear hash like Perlin uses
