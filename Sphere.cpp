@@ -20,13 +20,13 @@ Sphere::renderGL()
     glPopMatrix();
 }
 
-bool Sphere::doIntersect(std::vector<void *> const &objs, HitInfo& result, const Ray& ray,
+bool Sphere::doIntersect(IntersectObjects const &objs, HitInfo& result, const Ray& ray,
                          float tMin, float tMax)
 {
     bool hit = false;
-    for (int i = 0; i < objs.size(); ++i)
+    for (int i = 0; i < objs.plain.size(); ++i)
     {
-        Sphere *s = (Sphere *)objs[i];
+        Sphere *s = (Sphere *)objs.plain[i];
         const Vector3 toO = ray.o - s->m_center; 
 
         const float a = ray.d.length2(); 
@@ -37,7 +37,7 @@ bool Sphere::doIntersect(std::vector<void *> const &objs, HitInfo& result, const
 
         if (discrim < 0) 
         {
-            break;   // quadratic equation would yield imaginary numbers
+            continue;   // quadratic equation would yield imaginary numbers
         }
 
         const float sqrt_discrim = sqrt(discrim); 
@@ -58,7 +58,7 @@ bool Sphere::doIntersect(std::vector<void *> const &objs, HitInfo& result, const
         else
         {
             // neither of the solutions are in the required range
-            break; 
+            continue; 
         }
 
         hit = true;
