@@ -16,6 +16,28 @@
 #define GSSEALIGN
 #endif
 
+inline float _mm_extract_ps1(__m128 a, int i)
+{
+	union
+	{
+		__m128 m;
+		float f[4];
+	} u;
+	u.m = a;
+	return u.f[i];
+}
+
+inline int _mm_extract_int(__m128 a, int i)
+{
+	union
+	{
+		__m128 m;
+		int f[4];
+	} u;
+	u.m = a;
+	return u.f[i];
+}
+
 class SSE
 {
 public:

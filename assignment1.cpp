@@ -97,13 +97,13 @@ makeTeapotScene()
     g_scene->addLight(light);
 
     Material* diffuse = new Lambert(Vector3(0.f, 0.f, 1.f), 0.3);
-    Material* diffuse2 = new Lambert(Vector3(1.f, 0.f, 0.f));
+    Material* diffuse2 = new Lambert(Vector3(1.f, 1.f, 1.f), 1);
     Material* specular = new SimpleReflection();
     std::vector<std::pair<float, Material *> > combination;
-    combination.push_back(std::make_pair(0.4f, diffuse));
-    combination.push_back(std::make_pair(0.5f, specular));
-    Material* mat = new LinearCombination(combination);
-    combination[0] = std::make_pair(0.4f, diffuse2);
+    combination.push_back(std::make_pair(0.5f, diffuse));
+    combination.push_back(std::make_pair(0.8f, specular));
+    Material* mat = diffuse;
+    combination[0] = std::make_pair(0.2f, diffuse2);
     Material* mat2 = new LinearCombination(combination);
 
     TriangleMesh * bunny = new TriangleMesh;

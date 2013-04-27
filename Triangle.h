@@ -1,6 +1,7 @@
 #ifndef CSE168_TRIANGLE_H_INCLUDED
 #define CSE168_TRIANGLE_H_INCLUDED
 
+#include "SSE.h"
 #include "Object.h"
 #include "SSEObject.h"
 
@@ -23,18 +24,11 @@ public:
 
     virtual ObjType type() const { return TRIANGLE; }
     virtual void *ptr() { return this; }
-    static SSEObject * preProcess( std::vector<void *> &objects );
+    static void * preProcess( std::vector<void *> &objects );
 
 protected:
     TriangleMesh* m_mesh;
     unsigned int m_index;
-
-    struct SSETriangles : public SSEObject
-    {
-        SSEVector4 a, b, c;
-        Triangle *tri;
-        int j;
-    };
 };
 
 #endif // CSE168_TRIANGLE_H_INCLUDED

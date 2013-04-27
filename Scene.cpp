@@ -1,3 +1,4 @@
+#include "boost/threadpool.hpp"
 #include "Miro.h"
 #include "Scene.h"
 #include "Camera.h"
@@ -5,7 +6,6 @@
 #include "Console.h"
 
 #include <boost/timer/timer.hpp>
-#include "boost/threadpool.hpp"
 
 Scene * g_scene = 0;
 
@@ -59,10 +59,23 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
     return results;
 }
 
+inline int nCpus()
+{
+#ifdef WIN32
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo( &sysinfo );
+
+    return sysinfo.dwNumberOfProcessors;
+#else
+    return sysconf( _SC_NPROCESSORS_ONLN );
+#endif
+}
+
 void
 Scene::raytraceImage(Camera *cam, Image *img)
 {
-    boost::threadpool::pool threadpool(2);
+    boost::timer::auto_cpu_timer t;
+    boost::threadpool::pool threadpool(nCpus() * 2);
     std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
     std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
 

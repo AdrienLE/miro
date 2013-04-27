@@ -1,6 +1,6 @@
 MAKE		= make
 AR		= @ar
-CC              = @g++-4.8
+CC              = @clang++
 MV		= @mv
 RM		= @rm -rf
 MKDIR		= @mkdir
@@ -14,7 +14,7 @@ LIBS	 	= -lm -lX11 -lXmu -lXi -lXext -lGL -lGLU -lglut -lboost_thread-mt -lboost
 LIBDIRS 	= -L. -L/usr/X11R6/lib
 LDFLAGS		= $(LIBDIRS) $(LIBS) -O3
 CFLAGS          = $(INCDIRS) -march=native -std=c++11 -O3 \
--Wno-deprecated -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE  -g
+-Wno-deprecated -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -g
 
 .SUFFIXES: .cpp .h .d .o
 

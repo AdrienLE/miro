@@ -5,7 +5,7 @@
 #include <float.h>
 #include <iostream>
 
-#define EPSILON 0.0001f
+#define EPSILON 0.001f
 
 #ifdef WIN32
 #pragma warning(disable:4305) // disable useless warnings

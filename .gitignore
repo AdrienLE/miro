@@ -21,3 +21,6 @@ callgrind*
 *.vspx
 ipch
 x64
+*.gch*
+*.pch*
+*.bak

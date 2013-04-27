@@ -7,6 +7,6 @@ struct IntersectObjects
 {
     IntersectObjects() : sse_preprocessed(0) {}
 
-    SSEObject *sse_preprocessed;
+    void *sse_preprocessed;
     std::vector<void *> plain;
 };
