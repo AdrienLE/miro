@@ -225,6 +225,9 @@ public:
                x * b.y - y * b.x);
 
     }
+
+    Vector3 abs() const {return Vector3(std::abs(x), std::abs(y), std::abs(z));}
+    bool operator>(Vector3 const &v) const {return x > v.x && y > v.y && z > v.z;}
 };
 
 

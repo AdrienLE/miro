@@ -2,6 +2,7 @@
 #define CSE168_RAY_H_INCLUDED
 
 #include "Vector3.h"
+#include <vector>
 
 #define MAX_RAY_ITER 15
 
@@ -11,6 +12,8 @@ public:
     Vector3 o,      //!< Origin of ray
             d;      //!< Direction of ray
     int iter;
+    std::vector<float> *refractionStack;
+    int refractionIndex;
 
     Ray() : o(), d(Vector3(0.0f,0.0f,1.0f)), iter(0)
     {

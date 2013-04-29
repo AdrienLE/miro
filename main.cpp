@@ -9,7 +9,7 @@
 #include "Sphere.h"
 #include "TriangleMesh.h"
 #include "Triangle.h"
-#include "LightingModel.h"
+#include "Phong.h"
 #include "MiroWindow.h"
 #include "assignment1.h"
 
@@ -37,7 +37,7 @@ makeSpiralScene()
     g_scene->addLight(light);
 
     // create a spiral of spheres
-    Material* mat = new LightingModel(Vector3(1.0f, 0.0f, 0.0f));
+    Material* mat = new Phong(Vector3(1.0f, 0.0f, 0.0f), 0, 0);
     const int maxI = 200;
     const float a = 0.15f;
     for (int i = 1; i < maxI; ++i)
@@ -83,7 +83,7 @@ makeLorenzScene()
     g_scene->addLight(light);
 
     // create a spiral of spheres
-    Material* mat = new LightingModel(Vector3(1.0f, 0.0f, 0.0f));
+    Material* mat = new Phong(Vector3(1.0f, 0.0f, 0.0f), 0, 0);
     const int maxI = 10000;
     const float a = 0.15f;
     const float pi = 28;
@@ -106,7 +106,7 @@ makeLorenzScene()
         Sphere * sphere = new Sphere;
         sphere->setCenter(Vector3(x,y,z));
         sphere->setRadius(0.005 * t);
-        sphere->setMaterial(new LightingModel(Vector3((i % 100) / 100.0, 0.5 * (i % 30) / 30.0, ((i % 20) / 20.0))));
+        sphere->setMaterial(new Phong(Vector3((i % 100) / 100.0, 0.5 * (i % 30) / 30.0, ((i % 20) / 20.0)), 0, 0));
         g_scene->addObject(sphere);
         if (x > minx)
             minx = x;

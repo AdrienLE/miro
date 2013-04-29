@@ -48,11 +48,16 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
     Ray ray;
     HitInfo hitInfo;
     Vector3 shadeResult;
+    std::vector<float> refr_stack;
     for (int i = 0; i < img->width(); ++i)
     {
         for (int k = 0; k < m_antialiasing.size(); ++k)
         {
             ray = cam->eyeRay(i + m_antialiasing[k].x, j + m_antialiasing[k].y, img->width(), img->height());
+            refr_stack.clear();
+            refr_stack.push_back(1.f);
+            ray.refractionStack = &refr_stack;
+            ray.refractionIndex = 0;
             if (!results[i])
                 results[i] = new Vector3();
             if (trace(hitInfo, ray))
@@ -104,7 +109,7 @@ void
 Scene::raytraceImage(Camera *cam, Image *img)
 {
     boost::timer::auto_cpu_timer t;
-    boost::threadpool::pool threadpool(nCpus() * 2);
+    boost::threadpool::pool threadpool(1);//nCpus() * 2);
     std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
     std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
 

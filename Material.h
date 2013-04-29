@@ -19,25 +19,4 @@ protected:
 	Vector3 m_color;
 };
 
-// The distinction is being made because specular materials
-// will typically be wrappers around a diffuse material
-class TextureMaterial : public Material {};
-class DiffuseMaterial : public Material
-{
-public:
-    void setTexture(shared_ptr<TextureMaterial> tex) { m_tex = tex; }
-protected:
-    shared_ptr<TextureMaterial> m_tex;
-};
-class SpecularMaterial : public Material {};
-class ReflectMaterial : public SpecularMaterial {};
-class RefractMaterial : public SpecularMaterial {};
-class HighlightsMaterial : public SpecularMaterialMaterial
-{
-public:
-    void setTexture(shared_ptr<TextureMaterial> tex) { m_tex = tex; }
-protected:
-    shared_ptr<TextureMaterial> m_tex;
-};
-
 #endif // CSE168_MATERIAL_H_INCLUDED

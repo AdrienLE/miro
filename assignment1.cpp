@@ -10,9 +10,7 @@
 #include "TriangleMesh.h"
 #include "Triangle.h"
 #include "Sphere.h"
-#include "Lambert.h"
-#include "SimpleReflection.h"
-#include "LinearCombination.h"
+#include "Phong.h"
 #include "CellularStoneTexture.h"
 
 void
@@ -38,7 +36,7 @@ makeBunnyScene()
     light->setWattage(500);
     g_scene->addLight(light);
 
-    Material* mat = new Lambert(Vector3(1.0f));
+    Material* mat = new Phong(Vector3(1.0f), 0, 0);
 
     TriangleMesh * bunny = new TriangleMesh;
     bunny->load("bunny.obj");
@@ -91,23 +89,17 @@ makeTeapotScene()
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(-10, 15, 10));
+    light->setPosition(Vector3(10, 15, 10));
     light->setColor(Vector3(1, 1, 1));
-    light->setBlur(1, 10);
     light->setWattage(500);
     g_scene->addLight(light);
 
-    g_scene->setAntiAliasing(2, 2);
-
-    Material* diffuse = new Lambert(shared_ptr<Material>(new CellularStoneTexture(0.2f)), 0.3);
-    Material* diffuse2 = new Lambert(Vector3(1.f, 1.f, 1.f), 1);
-    Material* specular = new SimpleReflection();
-    std::vector<std::pair<float, Material *> > combination;
-    combination.push_back(std::make_pair(0.3f, diffuse));
-    combination.push_back(std::make_pair(0.7f, specular));
-    Material* mat = diffuse;
-    combination[0] = std::make_pair(0.3f, diffuse2);
-    Material* mat2 = new LinearCombination(combination);
+    Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.2f)), 0.2);
+    mat->setDiffuseProportion(0.5);
+    mat->setSpecularProportion(0.3);
+    Phong* mat2 = new Phong(Vector3(1.f, 1.f, 1.f), 0, 0.2);
+    mat2->setDiffuseProportion(0.1);
+    mat2->setSpecularProportion(0.7);
 
     TriangleMesh * bunny = new TriangleMesh;
     bunny->load("teapot.obj");
@@ -137,6 +129,15 @@ makeTeapotScene()
     t->setMesh(floor);
     t->setMaterial(mat2); 
     g_scene->addObject(t);
+
+    Phong *transp = new Phong(1, 1, 0.0);
+    transp->setDiffuseProportion(0.0);
+    transp->setRefraction(1.3, 1.0);
+    Sphere * sphere = new Sphere();
+    sphere->setCenter(Vector3(0, 3, 2));
+    sphere->setRadius(2);
+    sphere->setMaterial(transp);
+    g_scene->addObject(sphere);
     
     // let objects do pre-calculations if needed
     g_scene->preCalc();
@@ -165,7 +166,7 @@ makeSphereScene()
     light->setWattage(500);
     g_scene->addLight(light);
 
-    Material* mat = new Lambert(Vector3(1.0f));
+    Material* mat = new Phong(Vector3(1.0f), 0, 0);
 
     TriangleMesh * bunny = new TriangleMesh;
     bunny->load("sphere.obj");
@@ -223,7 +224,7 @@ makeTextureScene()
     light->setWattage(300);
     g_scene->addLight(light);
 
-    Material* mat = new Lambert(shared_ptr<Material>(new CellularStoneTexture()), 0.1);
+    Material* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture()), 0.1);
 
 	//Material* mat = new CellularStoneTexture(Vector3(.5f, .0f, .2f));
 

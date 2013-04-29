@@ -4,7 +4,7 @@
 #include "Material.h"
 #include <vector>
 
-class CellularStoneTexture : public DiffuseMaterial
+class CellularStoneTexture : public Material
 {
 public:
 	// tile_size: value between 0(small tiles) and 1(normal tiles)
