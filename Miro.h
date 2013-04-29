@@ -42,4 +42,9 @@ extern Camera* g_camera;
 extern Scene* g_scene;
 extern Image* g_image;
 
+inline float randone()
+{
+    return ((float)rand())/RAND_MAX;
+}
+
 #endif

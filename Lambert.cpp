@@ -1,21 +1,21 @@
-#include "Lambert.h"
+#include "LightingModel.h"
 #include "Ray.h"
 #include "Scene.h"
 
-Lambert::Lambert(const Vector3 & color, const Vector3 &ka): m_kd(new Material(color)), m_ka(ka)
+LightingModel::LightingModel(const Vector3 & color, const Vector3 &ka): m_kd(new Material(color)), m_ka(ka)
 {
 }
 
-Lambert::Lambert(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ka(ka)
+LightingModel::LightingModel(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ka(ka)
 {
 }
 
-Lambert::~Lambert()
+LightingModel::~LightingModel()
 {
 }
 
 Vector3
-Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
+LightingModel::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 {
     Vector3 L = Vector3(0.0f, 0.0f, 0.0f);
     
@@ -32,12 +32,20 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
         Vector3 l = pLight->position() - hit.P;
 
-        Ray lightray;
-        lightray.d = l.normalized();
-        lightray.o = hit.P;
-        HitInfo lighthit;
+        float shadow_mul = 0.f;
 
-        if (scene.trace(lighthit, lightray, EPSILON, l.length()))
+        for (int i = 0; i < pLight->samples(); ++i)
+        {
+            Ray lightray;
+            lightray.d = (((pLight->sphere()*(Vector3(randone(), randone(), randone())-Vector3(0.5)))+pLight->position()) - hit.P).normalized();
+            lightray.o = hit.P;
+            HitInfo lighthit;
+
+            if (!scene.trace(lighthit, lightray, EPSILON, l.length()))
+                shadow_mul += 1.f/pLight->samples();
+        }
+
+        if (shadow_mul < EPSILON)
             continue;
         
         // the inverse-squared falloff
@@ -48,7 +56,7 @@ Lambert::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
         // get the diffuse component
         float nDotL = dot(hit.N, l);
-        Vector3 result = pLight->color();
+        Vector3 result = pLight->color()*shadow_mul;
 		result *= color;
         
         L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result;

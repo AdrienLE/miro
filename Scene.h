@@ -21,9 +21,13 @@ public:
     void preCalc();
     void openGL(Camera *cam);
 
+    Scene() {setAntiAliasing(1, 1);}
+
     void raytraceImage(Camera *cam, Image *img);
     bool trace(HitInfo& minHit, const Ray& ray,
                float tMin = 0.0f, float tMax = MIRO_TMAX) const;
+
+    void setAntiAliasing(int x, int y);
 
 protected:
     std::vector<Vector3 *> traceLine(Camera const *cam, Image const *img, int j) const;
@@ -31,6 +35,14 @@ protected:
     Objects m_objects;
     BVH m_bvh;
     Lights m_lights;
+    struct Vector2
+    {
+        float x;
+        float y;
+        Vector2(float _x, float _y) : x(_x), y(_y) {}
+        Vector2() {}
+    };
+    std::vector<Vector2> m_antialiasing;
 };
 
 extern Scene * g_scene;

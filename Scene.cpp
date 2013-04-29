@@ -50,13 +50,42 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
     Vector3 shadeResult;
     for (int i = 0; i < img->width(); ++i)
     {
-        ray = cam->eyeRay(i, j, img->width(), img->height());
-        if (trace(hitInfo, ray))
+        for (int k = 0; k < m_antialiasing.size(); ++k)
         {
-            results[i] = new Vector3(hitInfo.material->shade(ray, hitInfo, *this));
+            ray = cam->eyeRay(i + m_antialiasing[k].x, j + m_antialiasing[k].y, img->width(), img->height());
+            if (!results[i])
+                results[i] = new Vector3();
+            if (trace(hitInfo, ray))
+            {
+                *results[i] += hitInfo.material->shade(ray, hitInfo, *this);
+            }
+            else
+            {
+                *results[i] += cam->bgColor();
+            }
         }
+        if (results[i])
+            *results[i] /= m_antialiasing.size();
     }
     return results;
+}
+
+void Scene::setAntiAliasing(int x, int y)
+{
+    m_antialiasing.clear();
+    for (int i = 0; i < x; ++i)
+        for (int j = 0; j < y; ++j)
+            m_antialiasing.push_back(Vector2(((float)i)/x - 0.5f, ((float)j)/y - 0.5f));
+    // Wikipedia says these constants are good...
+    const float angle = atanf(0.5f);
+    const float scale = sqrtf(5.f)/2.f;
+    for (int i = 0; i < m_antialiasing.size(); ++i)
+    {
+        Vector2 n;
+        n.x = (m_antialiasing[i].x * cosf(angle) - m_antialiasing[i].y * sinf(angle)) * scale;
+        n.y = (m_antialiasing[i].x * sin(angle) + m_antialiasing[i].y * cosf(angle)) * scale;
+        m_antialiasing[i] = n;
+    }
 }
 
 inline int nCpus()

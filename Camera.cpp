@@ -95,7 +95,7 @@ Camera::drawGL()
 
 
 Ray
-Camera::eyeRay(int x, int y, int imageWidth, int imageHeight) const
+Camera::eyeRay(float x, float y, int imageWidth, int imageHeight) const
 {
     // first compute the camera coordinate system 
     // ------------------------------------------

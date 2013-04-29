@@ -29,9 +29,9 @@ namespace
         FourVectors cross(const FourVectors &v) const
         {
             FourVectors res;
-            res.x = _mm_sub_ps(_mm_mul_ps(y, v.z), _mm_mul_ps(z, v.y));
             res.y = _mm_sub_ps(_mm_mul_ps(z, v.x), _mm_mul_ps(x, v.z));
             res.z = _mm_sub_ps(_mm_mul_ps(x, v.y), _mm_mul_ps(y, v.x));
+            res.x = _mm_sub_ps(_mm_mul_ps(y, v.z), _mm_mul_ps(z, v.y));
             return res;
         }
         __m128 dot(const FourVectors &v) const
@@ -44,14 +44,18 @@ namespace
         FourVectors a;
         FourVectors ab;
         FourVectors ac;
+    };
+    struct Triangleref
+    {
         Triangle *tri[4];
     };
     struct SSETriangles
     {
         SSETriangle *triangles;
+        Triangleref *refs;
         int num_triangles;
 
-        SSETriangles(SSETriangle *t, int n): triangles(t), num_triangles(n) {}
+        SSETriangles(SSETriangle *t, Triangleref *r, int n): triangles(t), refs(r), num_triangles(n) {}
     };
     struct TmpTriangle
     {
@@ -106,8 +110,8 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
         SSETriangles const *triangles = (SSETriangles const*)objects.sse_preprocessed;
         FourVectors d4(md);
         FourVectors o4(ray.o);
-        __m128 zero = _mm_set_ps1(0);
-        __m128 one = _mm_set_ps1(1.f);
+        __m128 zero = _mm_set_ps1(-0.0001);
+        __m128 one = _mm_set_ps1(1.0001f);
         __m128 minT = _mm_set_ps1(tMax);
         __m128 vtMin = _mm_set_ps1(tMin);
         __m128 minI = _mm_set_ps1(*(float*)&m1);
@@ -117,8 +121,8 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             SSETriangle const &tri = triangles->triangles[i];
             FourVectors const &ab = tri.ab;
             FourVectors const &ac = tri.ac;
-            FourVectors normal = ab.cross(ac);
             FourVectors o_a = o4 - tri.a;
+            FourVectors normal = ab.cross(ac);
             // Note: I used to use _mm_rcp_ps here and this caused a bug that took me hours to track because _mm_rcp_ps is approximate.
             __m128 detA = _mm_div_ps(_mm_set_ps1(1.f), d4.dot(normal));
             __m128 t = _mm_mul_ps(o_a.dot(normal), detA);
@@ -126,15 +130,14 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             __m128 beta = _mm_mul_ps(d4.dot(ab.cross(o_a)), detA);
             __m128 cnd = _mm_and_ps(_mm_cmpge_ps(t, vtMin), _mm_and_ps(_mm_cmple_ps(_mm_add_ps(beta, alpha), one), _mm_and_ps(_mm_cmpge_ps(alpha, zero), _mm_cmpge_ps(beta, zero))));
             // At this stage, all the cnd contains 0xffffffff for all indexes where the point is valid, and 0 elsewhere
-            t = _mm_or_ps(_mm_and_ps(t, cnd), _mm_andnot_ps(cnd, minT));
+            t = _mm_blendv_ps(minT, t, cnd);
             __m128 t2 = _mm_min_ps(t, _mm_shuffle_ps(t, t, _MM_SHUFFLE(1, 0, 3, 2)));
             __m128 curI = _mm_set_ps1(*(float*)&i);
-            __m128 shuffled = _mm_shuffle_ps(t2, t2, _MM_SHUFFLE(2, 3, 0, 1));
-            t2 = _mm_min_ps(t2, shuffled);
+            t2 = _mm_min_ps(t2, _mm_shuffle_ps(t2, t2, _MM_SHUFFLE(2, 3, 0, 1)));
             // At this stage, t2 contains only the minimum t so far, including the current triangle
             __m128 is_lowest = _mm_cmplt_ps(t2, minT); // Whether this time was when we found a lower t
             minT = t2;
-            minI = _mm_or_ps(_mm_and_ps(curI, is_lowest), _mm_andnot_ps(is_lowest, minI));
+            minI = _mm_blendv_ps(minI, curI, is_lowest);
         }
         int min_index = _mm_extract_int(minI, 0);
         if (min_index >= 0)
@@ -142,29 +145,30 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             SSETriangle const &tri = triangles->triangles[min_index];
             FourVectors const &ab = tri.ab;
             FourVectors const &ac = tri.ac;
-            FourVectors normal = ab.cross(ac);
             FourVectors o_a = o4 - tri.a;
+            FourVectors const &normal = ab.cross(ac);
             __m128 detA = _mm_div_ps(_mm_set_ps1(1.f), d4.dot(normal));
             __m128 t = _mm_mul_ps(o_a.dot(normal), detA);
             __m128 alpha = _mm_mul_ps(d4.dot(o_a.cross(ac)), detA);
             __m128 beta = _mm_mul_ps(d4.dot(ab.cross(o_a)), detA);
             __m128 cnd = _mm_and_ps(_mm_cmpge_ps(t, vtMin), _mm_and_ps(_mm_cmple_ps(_mm_add_ps(beta, alpha), one), _mm_and_ps(_mm_cmpge_ps(alpha, zero), _mm_cmpge_ps(beta, zero))));
-            t = _mm_or_ps(_mm_and_ps(t, cnd), _mm_andnot_ps(cnd, _mm_set_ps1(tMax)));
+            t = _mm_blendv_ps(_mm_set_ps1(tMax), t, cnd);
             int min = 0;
             for (int i = 1; i < 4; ++i)
                 if (_mm_extract_ps1(t, i) < _mm_extract_ps1(t, min) && _mm_extract_ps1(t, i) > tMin)
                     min = i;
             result.t = _mm_extract_ps1(t, min);
             result.P = ray.o + result.t * ray.d;
-            Vector3 *ns = tri.tri[min]->m_mesh->normals();
-            TriangleMesh::TupleI3 *ni = tri.tri[min]->m_mesh->nIndices();
-            Vector3 na = ns[ni[tri.tri[min]->m_index].x];
-            Vector3 nb = ns[ni[tri.tri[min]->m_index].y];
-            Vector3 nc = ns[ni[tri.tri[min]->m_index].z];
+            Triangle *tr = triangles->refs[min_index].tri[min];
+            Vector3 *ns = tr->m_mesh->normals();
+            TriangleMesh::TupleI3 *ni = tr->m_mesh->nIndices();
+            Vector3 na = ns[ni[tr->m_index].x];
+            Vector3 nb = ns[ni[tr->m_index].y];
+            Vector3 nc = ns[ni[tr->m_index].z];
             float alphaf = _mm_extract_ps1(alpha, min), betaf = _mm_extract_ps1(beta, min);
             result.N = (1 - alphaf - betaf) * na + alphaf * nb + betaf * nc;
             result.N.normalize();
-            result.material = tri.tri[min]->m_material;
+            result.material = tr->m_material;
             tMax = result.t;
             hit = true;
         }
@@ -211,6 +215,7 @@ void * Triangle::preProcess( std::vector<void *> &objects )
     if (!sse_info.hasSSE())
         return 0;
     SSETriangle *tris = new SSETriangle[objects.size() / 4];
+    Triangleref *refs = new Triangleref[objects.size() / 4];
     TmpTriangle triangles[4];
     int cur_in_four = 0;
     int cur = 0;
@@ -223,7 +228,7 @@ void * Triangle::preProcess( std::vector<void *> &objects )
         triangles[cur_in_four].points[0] = vs[vi[tri->m_index].x];
         triangles[cur_in_four].points[1] = vs[vi[tri->m_index].y] - vs[vi[tri->m_index].x];
         triangles[cur_in_four].points[2] = vs[vi[tri->m_index].z] - vs[vi[tri->m_index].x];
-        tris[cur].tri[cur_in_four] = tri;
+        refs[cur].tri[cur_in_four] = tri;
 
         cur_in_four++;
         if (cur_in_four >= 4)
@@ -238,7 +243,7 @@ void * Triangle::preProcess( std::vector<void *> &objects )
 
     int old_size = objects.size();
     objects.resize(objects.size() % 4);
-    return new SSETriangles(tris, old_size / 4);
+    return new SSETriangles(tris, refs, old_size / 4);
 }
 
 
