@@ -1,6 +1,7 @@
 #ifndef CSE168_VECTOR3_H_INCLUDED
 #define CSE168_VECTOR3_H_INCLUDED
 
+#include <cmath>
 #include <math.h>
 #include <float.h>
 #include <iostream>
