@@ -1,0 +1,34 @@
+Here are the additional features we implemented:
+- SSE4.1
+    We intersect 4 triangles with one ray. Here are the speeds for makeBunnyScene on the
+    same machine in the same circumstances:
+      With SSE:
+      9.488799s wall, 16.480000s user + 0.100000s system = 16.580000s CPU (174.7%)
+      Without:
+      43.368174s wall, 75.620000s user + 0.440000s system = 76.060000s CPU (175.4%)
+    A 4x speedup is what is expected. We are actually getting more here because there
+    is no branching in the SSE code and the strictly minimum amount of computation is
+    done in the loop, unlike the regular code. In any case, the speedup is definitely
+    attributable to SSE
+- Multithreading
+    That's really easy, just a threadpool and we get a 2x speedup on dual-core machines,
+    4x on quad-core and so on. The number of threads = the number of cores * 2
+- Blurry shadows
+    Done by saying the pointlight is really a sphere, and tracing a ray to a certain
+    number of random points in that sphere. Deactivated by default.
+- Antialiasing
+    Uses rotated grid supersampling. When using blurry shadows, the number of samples
+    can be divided by the number of subpoints in the antialiasing to get the same result
+    while keeping the amount of computation reasonable.
+
+Specificities:
+- We weren't sure what was meant by a stone texture, so we created something similar to
+  an example texture from the course slides which looks like stone tiles.
+- It is possible to specify that an object has no shadow, as a way to prevent transparent
+  refraction objects from being too ugly. The implementation of this actually can still
+  be improved for better performance.
+- The Makefile works for MacOSX. For linux, the names of the boost libraries should lose
+  the '-mt' at the end for it to compile, most likely.
+
+The teapot scene showcases most of the features: reflection, refraction, highlights,
+texture, blurry shadows, antialiasing... The other are plain renderings of the scenes.
