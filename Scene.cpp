@@ -66,7 +66,7 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
             }
             else
             {
-                *results[i] += cam->bgColor();
+                *results[i] += bgColor();
             }
         }
         if (results[i])
@@ -109,7 +109,7 @@ void
 Scene::raytraceImage(Camera *cam, Image *img)
 {
     boost::timer::auto_cpu_timer t;
-    boost::threadpool::pool threadpool(1);//nCpus() * 2);
+    boost::threadpool::pool threadpool(nCpus() * 2);
     std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
     std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
 

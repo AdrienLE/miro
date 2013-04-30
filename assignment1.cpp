@@ -23,7 +23,7 @@ makeBunnyScene()
     g_image->resize(128, 128);
     
     // set up the camera
-    g_camera->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
     g_camera->setEye(Vector3(-2, 3, 5));
     g_camera->setLookAt(Vector3(-.5, 1, 0));
     g_camera->setUp(Vector3(0, 1, 0));
@@ -36,8 +36,10 @@ makeBunnyScene()
     light->setWattage(500);
     g_scene->addLight(light);
 
-    Material* mat = new Phong(Vector3(1.0f), 0, 0);
-
+    Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.3)), 0.2);
+    Phong* mat2 = new Phong(1, 0, 0.2);
+    mat = mat2;
+    mat->setPhong(10, 0.5);
     TriangleMesh * bunny = new TriangleMesh;
     bunny->load("bunny.obj");
     
@@ -64,7 +66,7 @@ makeBunnyScene()
     Triangle* t = new Triangle;
     t->setIndex(0);
     t->setMesh(floor);
-    t->setMaterial(mat); 
+    t->setMaterial(mat2); 
     g_scene->addObject(t);
     
     // let objects do pre-calculations if needed
@@ -81,7 +83,7 @@ makeTeapotScene()
     g_image->resize(128, 128);
     
     // set up the camera
-    g_camera->setBGColor(Vector3(0.8f, 0.8f, 1.f));
+    g_scene->setBGColor(Vector3(0.8f, 0.8f, 1.f));
     g_camera->setEye(Vector3(-2, 3, 5));
     g_camera->setLookAt(Vector3(-.5, 1, 0));
     g_camera->setUp(Vector3(0, 1, 0));
@@ -91,25 +93,29 @@ makeTeapotScene()
     PointLight * light = new PointLight;
     light->setPosition(Vector3(10, 15, 10));
     light->setColor(Vector3(1, 1, 1));
+    light->setBlur(0.6, 10);
     light->setWattage(500);
     g_scene->addLight(light);
+    g_scene->setAntiAliasing(2, 2);
 
     Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.2f)), 0.2);
-    mat->setDiffuseProportion(0.5);
-    mat->setSpecularProportion(0.3);
-    Phong* mat2 = new Phong(Vector3(1.f, 1.f, 1.f), 0, 0.2);
-    mat2->setDiffuseProportion(0.1);
-    mat2->setSpecularProportion(0.7);
+    mat->setDiffuseProportion(0.8);
+    mat->setSpecularProportion(0);
+    mat->setPhong(100, 0.6);
+    Phong* mat2 = new Phong(shared_ptr<Material>(new CellularStoneTexture(1.f)), Vector3(0));
+    mat2->setDiffuseProportion(0.8);
+    mat2->setSpecularProportion(0.2);
+    mat2->setPhong(100, 0.6);
 
-    TriangleMesh * bunny = new TriangleMesh;
-    bunny->load("teapot.obj");
+    TriangleMesh * teapot = new TriangleMesh;
+    teapot->load("teapot.obj");
     
     // create all the triangles in the bunny mesh and add to the scene
-    for (int i = 0; i < bunny->numTris(); ++i)
+    for (int i = 0; i < teapot->numTris(); ++i)
     {
         Triangle* t = new Triangle;
         t->setIndex(i);
-        t->setMesh(bunny);
+        t->setMesh(teapot);
         t->setMaterial(mat); 
         g_scene->addObject(t);
     }
@@ -131,11 +137,13 @@ makeTeapotScene()
     g_scene->addObject(t);
 
     Phong *transp = new Phong(1, 1, 0.0);
-    transp->setDiffuseProportion(0.0);
-    transp->setRefraction(1.3, 1.0);
+    transp->setDiffuseProportion(0.2);
+    transp->setRefraction(1.3, 0.8);
+    transp->setPhong(30, 0.5);
+    transp->setCastShadow(false);
     Sphere * sphere = new Sphere();
-    sphere->setCenter(Vector3(0, 3, 2));
-    sphere->setRadius(2);
+    sphere->setCenter(Vector3(-1.0, 1.4, 0));
+    sphere->setRadius(0.8);
     sphere->setMaterial(transp);
     g_scene->addObject(sphere);
     
@@ -153,7 +161,7 @@ makeSphereScene()
     g_image->resize(128, 128);
     
     // set up the camera
-    g_camera->setBGColor(Vector3(0.0f, 0.0f, 0.0f));
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.0f));
     g_camera->setEye(Vector3(-2, 3, 5));
     g_camera->setLookAt(Vector3(-.5, 1, 0));
     g_camera->setUp(Vector3(0, 1, 0));
@@ -168,15 +176,15 @@ makeSphereScene()
 
     Material* mat = new Phong(Vector3(1.0f), 0, 0);
 
-    TriangleMesh * bunny = new TriangleMesh;
-    bunny->load("sphere.obj");
+    TriangleMesh * sphere = new TriangleMesh;
+    sphere->load("sphere.obj");
     
     // create all the triangles in the bunny mesh and add to the scene
-    for (int i = 0; i < bunny->numTris(); ++i)
+    for (int i = 0; i < sphere->numTris(); ++i)
     {
         Triangle* t = new Triangle;
         t->setIndex(i);
-        t->setMesh(bunny);
+        t->setMesh(sphere);
         t->setMaterial(mat); 
         g_scene->addObject(t);
     }
@@ -211,7 +219,7 @@ makeTextureScene()
     g_image->resize(800, 800);
     
     // set up the camera
-    g_camera->setBGColor(Vector3(0.8f, 0.8f, 1.0f));
+    g_scene->setBGColor(Vector3(0.8f, 0.8f, 1.0f));
     g_camera->setEye(Vector3(-1, 10, 10));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));

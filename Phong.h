@@ -13,7 +13,7 @@ public:
 
     void setDiffuseProportion(float f) {m_dp = f;}
     void setSpecularProportion(float f) {m_sp = f;}
-    void setPhong(float f) {m_phong = f;}
+    void setPhong(float f, float prop) {m_phong = f; m_phongp = prop;}
     void setRefraction(float indice, float proportion) {m_refr = indice; m_tp = proportion;}
 
     virtual void preCalc() {}
@@ -29,6 +29,7 @@ protected:
     float m_tp;
     float m_phong;
     float m_refr;
+    float m_phongp;
 };
 
 #endif // CSE168_LAMBERT_H_INCLUDED

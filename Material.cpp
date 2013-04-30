@@ -1,6 +1,6 @@
 #include "Material.h"
 
-Material::Material(const Vector3& color) : m_color(color)
+Material::Material(const Vector3& color) : m_color(color), m_castShadow(true)
 {
 }
 

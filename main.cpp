@@ -23,7 +23,7 @@ makeSpiralScene()
     g_image->resize(512, 512);
     
     // set up the camera
-    g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
+    g_scene->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
     g_camera->setEye(Vector3(-5, 2, 3));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
@@ -69,7 +69,7 @@ makeLorenzScene()
     g_image->resize(512, 512);
     
     // set up the camera
-    g_camera->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
+    g_scene->setBGColor(Vector3(1.0f, 1.0f, 1.0f));
     g_camera->setEye(Vector3(-5, 2, 150));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
@@ -125,7 +125,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-	makeTeapotScene();
+	makeBunnyScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();

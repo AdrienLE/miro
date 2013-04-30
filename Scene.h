@@ -12,6 +12,8 @@ class Image;
 class Scene
 {
 public:
+    Scene() : m_bgColor(0) {setAntiAliasing(1, 1);}
+
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}
     const Objects* objects() const      {return &m_objects;}
 
@@ -21,7 +23,11 @@ public:
     void preCalc();
     void openGL(Camera *cam);
 
-    Scene() {setAntiAliasing(1, 1);}
+    inline void setBGColor(float x, float y, float z);
+    inline void setBGColor(const Vector3& color);
+
+    inline const Vector3 & bgColor() const  {return m_bgColor;}
+
 
     void raytraceImage(Camera *cam, Image *img);
     bool trace(HitInfo& minHit, const Ray& ray,
@@ -31,6 +37,9 @@ public:
 
 protected:
     std::vector<Vector3 *> traceLine(Camera const *cam, Image const *img, int j) const;
+
+
+    Vector3 m_bgColor;
 
     Objects m_objects;
     BVH m_bvh;
@@ -46,5 +55,16 @@ protected:
 };
 
 extern Scene * g_scene;
+
+inline void Scene::setBGColor(float x, float y, float z)
+{
+    Vector3 v(x, y, z);
+    setBGColor(v);
+}
+
+inline void Scene::setBGColor(const Vector3& vd)
+{
+    m_bgColor.set(vd);
+}
 
 #endif // CSE168_SCENE_H_INCLUDED

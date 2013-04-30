@@ -2,15 +2,15 @@
 #include "Ray.h"
 #include "Scene.h"
 
-Phong::Phong(const Vector3 & color, const Vector3 &ks, const Vector3 &ka): m_kd(new Material(color)), m_ks(new Material(ks)), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(10), m_refr(1)
+Phong::Phong(const Vector3 & color, const Vector3 &ks, const Vector3 &ka): m_kd(new Material(color)), m_ks(new Material(ks)), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_phongp(0)
 {
 }
 
-Phong::Phong(shared_ptr<Material> kd, shared_ptr<Material> ks, const Vector3 &ka) : m_kd(kd), m_ks(ks), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(10), m_refr(1)
+Phong::Phong(shared_ptr<Material> kd, shared_ptr<Material> ks, const Vector3 &ka) : m_kd(kd), m_ks(ks), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1)
 {
 }
 
-Phong::Phong(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ks(new Material(Vector3(1))), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(10), m_refr(1)
+Phong::Phong(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ks(new Material(Vector3(1))), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1)
 {
 }
 
@@ -44,10 +44,21 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
             Ray lightray;
             lightray.d = (((pLight->sphere()*(Vector3(randone(), randone(), randone())-Vector3(0.5)))+pLight->position()) - hit.P).normalized();
             lightray.o = hit.P;
-            HitInfo lighthit;
+            float remaininglength = l.length();
+            while (true)
+            {
+                HitInfo lighthit;
 
-            if (!scene.trace(lighthit, lightray, EPSILON, l.length()))
-                shadow_mul += 1.f/pLight->samples();
+                if (!scene.trace(lighthit, lightray, EPSILON, remaininglength))
+                {
+                    shadow_mul += 1.f/pLight->samples();
+                    break;
+                }
+                if (lighthit.material->castShadow())
+                    break;
+                remaininglength -= lighthit.t;
+                lightray.o = lighthit.P;
+            }
         }
 
         if (shadow_mul < EPSILON)
@@ -68,11 +79,11 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         {
             L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result * diffcolor * m_dp;
         }
-        if (m_sp > EPSILON && nDotL > 0)
+        if (m_phongp > EPSILON && nDotL > 0)
         {
             Vector3 normal = hit.N;
             Vector3 refl = -l + 2*nDotL*hit.N;
-            L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor * m_sp;
+            L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor * m_phongp;
             //Vector3 half = -ray.d + hit.N;
             //half.normalize();
             //L += std::max(0.f, powf(half.dot(hit.N), 1000)) * result * speccolor * m_sp;
@@ -83,7 +94,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     {
         Ray newray;
         newray.o = hit.P;
-        newray.d = -ray.d + 2*ray.d.dot(hit.N)*hit.N;
+        newray.d = ray.d - 2*ray.d.dot(hit.N)*hit.N;
         newray.iter = ray.iter + 1;
         newray.refractionIndex = ray.refractionIndex;
         newray.refractionStack = ray.refractionStack;
@@ -91,6 +102,10 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         if (scene.trace(minHit, newray, EPSILON))
         {
             L += minHit.material->shade(newray, minHit, scene) * m_sp;
+        }
+        else
+        {
+            L += scene.bgColor() * m_sp;
         }
     }
 
@@ -123,6 +138,10 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         if (scene.trace(minHit, newray, EPSILON))
         {
             L += minHit.material->shade(newray, minHit, scene) * m_tp;
+        }
+        else
+        {
+            L += scene.bgColor() * m_tp;
         }
     }
 

@@ -14,7 +14,6 @@ static bool firstRayTrace = true;
 const float HalfDegToRad = DegToRad/2.0f;
 
 Camera::Camera() :
-    m_bgColor(0,0,0),
     m_renderer(RENDER_OPENGL),
     m_eye(0,0,0),
     m_viewDir(0,0,-1),
@@ -54,7 +53,7 @@ Camera::click(Scene* pScene, Image* pImage)
         glDrawBuffer(GL_FRONT);
         if (firstRayTrace)
         {
-            pImage->clear(bgColor());
+            pImage->clear(pScene->bgColor());
             pScene->raytraceImage(this, g_image);
             firstRayTrace = false;
         }
