@@ -11,7 +11,7 @@
 #include "Triangle.h"
 #include "Phong.h"
 #include "MiroWindow.h"
-#include "assignment1.h"
+#include "assignment2.h"
 
 void
 makeSpiralScene()

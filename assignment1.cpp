@@ -14,7 +14,7 @@
 #include "CellularStoneTexture.h"
 
 void
-makeBunnyScene()
+a1_makeBunnyScene()
 {
     g_camera = new Camera;
     g_scene = new Scene;
@@ -36,9 +36,9 @@ makeBunnyScene()
     light->setWattage(500);
     g_scene->addLight(light);
 
-    Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.3)), 0.2);
+    Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
     Phong* mat2 = new Phong(1, 0, 0.2);
-    mat = mat2;
+    //mat = mat2;
     mat->setPhong(10, 0.5);
     TriangleMesh * bunny = new TriangleMesh;
     bunny->load("bunny_smooth.obj");
@@ -74,7 +74,7 @@ makeBunnyScene()
 }
 
 void
-makeTeapotScene()
+a1_makeTeapotScene()
 {
     g_camera = new Camera;
     g_scene = new Scene;
@@ -152,7 +152,7 @@ makeTeapotScene()
 }
 
 void
-makeSphereScene()
+a1_makeSphereScene()
 {
     g_camera = new Camera;
     g_scene = new Scene;
@@ -195,7 +195,7 @@ makeSphereScene()
 }
 
 void
-makeTextureScene()
+a1_makeTextureScene()
 {
     g_camera = new Camera;
     g_scene = new Scene;

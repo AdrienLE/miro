@@ -121,7 +121,7 @@ Scene::raytraceImage(Camera *cam, Image *img)
             lines.push_back(new boost::unique_future<std::vector<Vector3 *> >(tasks.back()->get_future()));
             boost::threadpool::schedule(threadpool, boost::bind(&boost::packaged_task<std::vector<Vector3 *> >::operator(), tasks.back()));
         }
-	printf("Rendering Progress: %.3f%%\r", 0.f);
+		printf("Rendering Progress: %.3f%%\r", 0.f);
         for (int j = 0; j < img->height(); ++j)
         {
             for (int i = 0; i < img->width(); ++i)
@@ -132,12 +132,12 @@ Scene::raytraceImage(Camera *cam, Image *img)
                     delete lines[j]->get()[i];
                 }
             }
-	    img->drawScanline(j);
-	    if (j + 1 == img->height() || !lines[j + 1]->has_value())
-	      glFinish();
-            printf("Rendering Progress: %.3f%%\r", j/float(img->height())*100.0f);
-            fflush(stdout);
-        }
+			img->drawScanline(j);
+			if (j + 1 == img->height() || !lines[j + 1]->has_value())
+				glFinish();
+			printf("Rendering Progress: %.3f%%\r", j/float(img->height())*100.0f);
+			fflush(stdout);
+		}
     }
     printf("Rendering Progress: 100.000%\n");
     debug("done Raytracing!\n");
