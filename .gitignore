@@ -19,9 +19,10 @@ callgrind*
 *.suo
 *.vcxproj*
 *.vspx
+*.db
 ipch
 x64
 *.gch*
 *.pch*
 *.bak
-Release\*
+Release/
