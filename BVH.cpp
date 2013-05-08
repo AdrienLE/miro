@@ -3,6 +3,7 @@
 #include "Console.h"
 #include "Sphere.h"
 #include "Triangle.h"
+#include "Box.h"
 
 void
 BVH::build(Objects * objs)
@@ -19,6 +20,7 @@ BVH::build(Objects * objs)
     m_intersect_fcts.resize(NB_OBJS);
     m_intersect_fcts[TRIANGLE] = &Triangle::doIntersect;
     m_intersect_fcts[SPHERE] = &Sphere::doIntersect;
+    m_intersect_fcts[BOX] = &Box::doIntersect;
 }
 
 

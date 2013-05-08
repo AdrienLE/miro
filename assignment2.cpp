@@ -9,6 +9,8 @@
 #include "TriangleMesh.h"
 #include "Triangle.h"
 #include "Phong.h"
+#include "CellularStoneTexture.h"
+#include "Box.h"
 
 // local helper function declarations
 namespace
@@ -19,6 +21,53 @@ inline Matrix4x4 scale(float x, float y, float z);
 inline Matrix4x4 rotate(float angle, float x, float y, float z);
 } // namespace
 
+void
+makeBoxScene()
+{
+	g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(512, 512);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
+    g_camera->setEye(Vector3(0, 3, 6));
+    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(10, 10, 10));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(700);
+    g_scene->addLight(light);
+
+    
+	Material* material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
+	TriangleMesh * floor = new TriangleMesh;
+    
+	floor->createSingleTriangle();
+    floor->setV1(Vector3(-10, 0, -10));
+    floor->setV2(Vector3(  0, 0,  10));
+    floor->setV3(Vector3( 10, 0, -10));
+    floor->setN1(Vector3(0, 1, 0));
+    floor->setN2(Vector3(0, 1, 0));
+    floor->setN3(Vector3(0, 1, 0));
+    
+    Triangle* t = new Triangle;
+    t->setIndex(0);
+    t->setMesh(floor);
+    t->setMaterial(material); 
+    g_scene->addObject(t);
+
+	Box *b = new Box(Vector3(0), Vector3(2));
+	b->setMaterial(material);
+	g_scene->addObject(b);
+	
+	g_scene->preCalc();
+}
 
 void
 makeTeapotScene()
@@ -63,7 +112,7 @@ makeTeapotScene()
     t->setMesh(floor);
     t->setMaterial(material); 
     g_scene->addObject(t);
-    
+
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 }
