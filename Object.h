@@ -11,6 +11,7 @@ enum ObjType
     SPHERE,
     TRIANGLE,
     BLPATCH,
+	BOUNDING_BOX,
     NB_OBJS
 };
 
