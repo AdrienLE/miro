@@ -24,6 +24,9 @@ public:
     virtual ObjType type() const { return SPHERE; }
     virtual void *ptr() { return this; }
 
+    virtual Vector3 minVector() const;
+    virtual Vector3 maxVector() const;
+
 protected:
     Vector3 m_center;
     float m_radius;

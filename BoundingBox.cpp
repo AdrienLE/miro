@@ -24,3 +24,9 @@ bool BoundingBox::doIntersect(HitInfo &result, const Ray &ray, float tMin, float
 	result.t = t_min < 0 ? t_max : t_min;
 	return true;
 }
+
+float BoundingBox::area() const
+{
+	Vector3 segments = (_a - _b).abs();
+	return (segments.x * segments.y + segments.x * segments.z + segments.y * segments.z) * 2;
+}

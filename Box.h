@@ -14,5 +14,8 @@ public:
 	virtual ObjType type() const { return BOX; }
 	
 	virtual void *ptr() { return this; }
+
+	virtual Vector3 minVector() const;
+	virtual Vector3 maxVector() const;
 };
 

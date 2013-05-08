@@ -35,6 +35,9 @@ public:
 
     virtual void *ptr() = 0;
 
+    virtual Vector3 minVector() const = 0;
+    virtual Vector3 maxVector() const = 0;
+
 protected:
     const Material* m_material;
 };

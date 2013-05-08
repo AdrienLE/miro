@@ -1,6 +1,7 @@
 #ifndef CSE168_VECTOR3_H_INCLUDED
 #define CSE168_VECTOR3_H_INCLUDED
 
+#include <cmath>
 #include <math.h>
 #include <float.h>
 #include <iostream>
@@ -225,6 +226,9 @@ public:
                x * b.y - y * b.x);
 
     }
+
+    Vector3 min(Vector3 const &b) const {return Vector3(std::min(x, b.x), std::min(y, b.y), std::min(z, b.z));}
+    Vector3 max(Vector3 const &b) const {return Vector3(std::max(x, b.x), std::max(y, b.y), std::max(z, b.z));}
 
     Vector3 abs() const {return Vector3(std::abs(x), std::abs(y), std::abs(z));}
     bool operator>(Vector3 const &v) const {return x > v.x && y > v.y && z > v.z;}

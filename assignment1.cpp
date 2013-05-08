@@ -1,4 +1,5 @@
 #include "assignment1.h"
+#include <cmath>
 #include <math.h>
 #include "Miro.h"
 #include "Scene.h"

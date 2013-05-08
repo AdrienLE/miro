@@ -207,6 +207,26 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
     return hit;
 }
 
+Vector3 Triangle::minVector() const
+{
+    Vector3 *vs = m_mesh->vertices();
+    TriangleMesh::TupleI3 *vi = m_mesh->vIndices();
+    Vector3 const &a = vs[vi[m_index].x];
+    Vector3 const &b = vs[vi[m_index].y];
+    Vector3 const &c = vs[vi[m_index].z];
+    return a.min(b).min(c);
+}
+
+Vector3 Triangle::maxVector() const
+{
+    Vector3 *vs = m_mesh->vertices();
+    TriangleMesh::TupleI3 *vi = m_mesh->vIndices();
+    Vector3 const &a = vs[vi[m_index].x];
+    Vector3 const &b = vs[vi[m_index].y];
+    Vector3 const &c = vs[vi[m_index].z];
+    return a.max(b).max(c);
+}
+
 void * Triangle::preProcess( std::vector<void *> &objects )
 {
     // Remove triangles until all the remaining ones have a multiple of 4

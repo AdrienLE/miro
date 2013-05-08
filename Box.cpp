@@ -84,3 +84,13 @@ bool Box::doIntersect(IntersectObjects const &objects, HitInfo& result, const Ra
 	}
 	return hit;
 }
+
+Vector3 Box::maxVector() const
+{
+	return _a.max(_b);
+}
+
+Vector3 Box::minVector() const
+{
+	return _a.min(_b);
+}

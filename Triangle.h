@@ -26,6 +26,9 @@ public:
     virtual void *ptr() { return this; }
     static void * preProcess( std::vector<void *> &objects );
 
+    virtual Vector3 minVector() const;
+    virtual Vector3 maxVector() const;
+
 protected:
     TriangleMesh* m_mesh;
     unsigned int m_index;

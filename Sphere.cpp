@@ -71,3 +71,13 @@ bool Sphere::doIntersect(IntersectObjects const &objs, HitInfo& result, const Ra
     }
     return hit;
 }
+
+Vector3 Sphere::maxVector() const
+{
+    return m_center + Vector3(m_radius);
+}
+
+Vector3 Sphere::minVector() const
+{
+    return m_center - Vector3(m_radius);
+}

@@ -11,6 +11,7 @@
 #include "Triangle.h"
 #include "Phong.h"
 #include "MiroWindow.h"
+#include "assignment1.h"
 #include "assignment2.h"
 
 void
@@ -125,7 +126,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-	makeBoxScene();
+	a1_makeSphereScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
