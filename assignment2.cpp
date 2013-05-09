@@ -23,6 +23,54 @@ inline Matrix4x4 rotate(float angle, float x, float y, float z);
 } // namespace
 
 void
+makeSpecialScene()
+{
+	g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(512, 512);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
+    g_camera->setEye(Vector3(0, 3, 6));
+    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(10, 10, 10));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(700);
+    g_scene->addLight(light);
+
+    Material* material = new Phong(1, 0, 0.2);
+    TriangleMesh * teapot = new TriangleMesh;
+    teapot->load("castle.obj");
+    addMeshTrianglesToScene(teapot, material);
+    
+    // create the floor triangle
+    TriangleMesh * floor = new TriangleMesh;
+    floor->createSingleTriangle();
+    floor->setV1(Vector3(-10, 0, -10));
+    floor->setV2(Vector3(  0, 0,  10));
+    floor->setV3(Vector3( 10, 0, -10));
+    floor->setN1(Vector3(0, 1, 0));
+    floor->setN2(Vector3(0, 1, 0));
+    floor->setN3(Vector3(0, 1, 0));
+    
+    Triangle* t = new Triangle;
+    t->setIndex(0);
+    t->setMesh(floor);
+    t->setMaterial(new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2)); 
+    g_scene->addObject(t);
+
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
+
+void
 makeBoxScene()
 {
 	g_camera = new Camera;
@@ -176,7 +224,7 @@ makeBunny20Scene()
     g_scene = new Scene;
     g_image = new Image;
 
-    g_image->resize(128, 128);
+    g_image->resize(1024, 1024);
     
     // set up the camera
     g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
@@ -193,7 +241,7 @@ makeBunny20Scene()
     g_scene->addLight(light);
 
     TriangleMesh * mesh;
-    Material* material = new Phong(1, 0, 0.2);
+    Material* material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
     Matrix4x4 xform;
     Matrix4x4 xform2;
     xform2 *= rotate(110, 0, 1, 0);
@@ -378,7 +426,7 @@ makeBunny20Scene()
     Triangle* t = new Triangle;
     t->setIndex(0);
     t->setMesh(mesh);
-    t->setMaterial(material); 
+    t->setMaterial(new Phong(1, 0, 0.2)); 
     g_scene->addObject(t);
     
     // let objects do pre-calculations if needed

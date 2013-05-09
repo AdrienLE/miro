@@ -38,6 +38,10 @@ protected:
     std::vector<Intersect> m_intersect_fcts;
 
     BBoxNode *m_root;
+
+public:
+	bool rec_intersect(BBoxNode *node, HitInfo& result, const Ray& ray, 
+		float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 };
 
 #endif // CSE168_BVH_H_INCLUDED

@@ -5,8 +5,9 @@
 #include "Triangle.h"
 #include "Box.h"
 #include "BoundingBox.h"
+#include <limits>
 
-#define INF (1.f/0.f)
+#define INF std::numeric_limits<float>::infinity()
 
 #define CBOX 1.f
 #define CTRI 1.f
@@ -88,14 +89,14 @@ BoundingBox BVH::objectBox(Objects *objs)
 
 void BVH::printHierarchy(BBoxNode *node, int ind)
 {
-    printf("%* s %f\n", ind, "", node->box.area());
+    printf("%f\n", node->box.area());
     if (node->a && node->b)
     {
         printHierarchy(node->a, ind + 1);
         printHierarchy(node->b, ind + 1);
     }
     else
-        printf("%* s triangles: %d\n", ind, "", (*node->objs)[TRIANGLE].plain.size());
+        printf("%f\n", (*node->objs)[TRIANGLE].plain.size());
 }
 
 void
@@ -124,6 +125,43 @@ BVH::build(Objects * objs)
     m_intersect_fcts[BOX] = &Box::doIntersect;
 }
 
+bool
+BVH::rec_intersect(BBoxNode *node, HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
+{
+	bool hit = false;
+	HitInfo tempMinHit;
+	minHit.t = MIRO_TMAX;
+
+	if (node->a == NULL && node->b == NULL)
+	{
+		for (size_t i = 0; i < NB_OBJS; ++i)
+		{
+			if (m_intersect_fcts[i] && m_intersect_fcts[i]((*node->objs)[i], tempMinHit, ray, tMin, tMax) && tempMinHit.t < minHit.t)
+			{
+				minHit = tempMinHit;
+				hit = true;
+			}
+		}
+
+	}
+	else
+	{
+		if (node->a && node->a->box.doIntersect(tempMinHit, ray, tMin, tMax))
+		{
+			hit = rec_intersect(node->a, minHit, ray, tMin, tMax);
+		}
+		if (node->b && node->b->box.doIntersect(tempMinHit, ray, tMin, tMax))
+		{
+			bool tmpHit = rec_intersect(node->b, tempMinHit, ray, tMin, tMax);
+			if (tmpHit && (!hit || (hit && tempMinHit.t < minHit.t)))
+			{
+				minHit = tempMinHit;
+				hit = true;
+			}
+		}
+	}
+	return hit;
+}
 
 bool
 BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
@@ -135,15 +173,5 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
     HitInfo tempMinHit;
     minHit.t = MIRO_TMAX;
 
-    for (size_t i = 0; i < NB_OBJS; ++i)
-    {
-        if (m_intersect_fcts[i] && m_intersect_fcts[i](m_categories_objects[i], tempMinHit, ray, tMin, tMax) && tempMinHit.t < minHit.t)
-        {
-            minHit = tempMinHit;
-            hit = true;
-        }
-    }
-
-    
-    return hit;
+	return rec_intersect(m_root, minHit, ray, tMin, tMax);
 }

@@ -126,7 +126,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-	a1_makeSphereScene();
+	makeBunny20Scene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
