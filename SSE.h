@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <smmintrin.h>
+#include "Miro.h"
 
 #if defined(WIN32) && defined(SSE)
 #define WSSEALIGN __declspec( align( 16 ) )
@@ -9,7 +10,18 @@
 #define WSSEALIGN
 #endif
 
-// TODO later
+inline int nCpus()
+{
+#ifdef WIN32
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo( &sysinfo );
+
+    return sysinfo.dwNumberOfProcessors;
+#else
+    return sysconf( _SC_NPROCESSORS_ONLN );
+#endif
+}
+
 #if defined(__GNUC__) && defined(SSE)
 #define GSSEALIGN __attribute__((aligned(16)))
 #else

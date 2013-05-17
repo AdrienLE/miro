@@ -93,18 +93,6 @@ void Scene::setAntiAliasing(int x, int y)
     }
 }
 
-inline int nCpus()
-{
-#ifdef WIN32
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo( &sysinfo );
-
-    return sysinfo.dwNumberOfProcessors;
-#else
-    return sysconf( _SC_NPROCESSORS_ONLN );
-#endif
-}
-
 void
 Scene::raytraceImage(Camera *cam, Image *img)
 {

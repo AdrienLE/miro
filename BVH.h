@@ -27,8 +27,33 @@ protected:
     	~BBoxNode() { delete a; delete b; delete objs; }
     };
 
-	void recBuildBBox(Objects *objs, BBoxNode *prev_node);
-	BoundingBox objectBox(Objects *objs);
+    struct AxisData
+    {
+        float lowest;
+        float highest;
+        float interval;
+        float pos;
+        int axis;
+        float cost;
+
+        bool operator<(AxisData const &other) const
+        {
+            return cost < other.cost;
+        }
+    };
+
+    struct ObjectWithBox
+    {
+        Object *obj;
+        Vector3 min, max;
+    };
+    typedef std::vector<ObjectWithBox> ObjectsWithBoxes;
+
+    void splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, float areaCinv, std::function<void (int, ObjectsWithBoxes::iterator &, ObjectsWithBoxes::iterator &)> f);
+    void buildLeaf(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, BVH::BBoxNode *prev_node);
+
+	void recBuildBBox(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, BVH::BBoxNode *prev_node, int depth = 0);
+	BoundingBox objectBox(ObjectsWithBoxes *objs);
 	void printHierarchy(BBoxNode *node, int ind);
 
     Objects * m_objects;

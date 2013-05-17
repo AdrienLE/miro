@@ -6,12 +6,14 @@
 #include "Box.h"
 #include "BoundingBox.h"
 #include <limits>
+#include <iterator>
+#include <boost/thread.hpp>
 
 #define INF std::numeric_limits<float>::infinity()
 
 #define CBOX 1.f
 #define CTRI 1.f
-#define SIZE_LEAF 8
+#define SIZE_LEAF 4
 
 static float costNTris(int n)
 {
@@ -23,66 +25,152 @@ static float cost(float areaA, int objA, float areaB, int objB, float areaCinv)
     return 2 * CBOX + (areaA * costNTris(objA) + areaB * costNTris(objB)) * areaCinv;
 }
 
-void BVH::recBuildBBox(Objects *objs, BVH::BBoxNode *prev_node)
+void BVH::splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, float areaCinv, std::function<void (int, ObjectsWithBoxes::iterator &, ObjectsWithBoxes::iterator &)> f)
 {
-    if (objs->size() <= SIZE_LEAF)
+    Vector3 v(INF);
+    abox.setA(v);
+    bbox.setA(v);
+    v.set(-INF);
+    abox.setB(v);
+    bbox.setB(v);
+    int a = 0, b = 0;
+    for (ObjectsWithBoxes::iterator it = begin; it != end;)
     {
-        prev_node->objs = new std::vector<IntersectObjects>();
-        prev_node->objs->resize(NB_OBJS);
-        for (size_t i = 0; i < objs->size(); ++i)
+        Vector3 const &min = it->min;
+        Vector3 const &max = it->max;
+        if (min[data.axis] > data.pos)
         {
-            (*prev_node->objs)[(*objs)[i]->type()].plain.push_back((*objs)[i]->ptr());
+            bbox.setA(bbox.getA().min(min));
+            bbox.setB(bbox.getB().max(max));
+            f(1, it, end);
+            b++;
+            continue;
         }
-        (*prev_node->objs)[TRIANGLE].sse_preprocessed = Triangle::preProcess((*prev_node->objs)[TRIANGLE].plain);
-        return;
-    }
-    Objects a, b;
-    BoundingBox abox(Vector3(-INF, -INF, -INF), Vector3(INF, INF, INF));
-    BoundingBox bbox = abox;
-    float areaA = 0.f, areaB = 0.f;
-    float areaCinv = 1.f / prev_node->box.area();
-    for (Objects::const_iterator it = objs->begin(); it != objs->end(); ++it)
-    {
-        Vector3 min = (*it)->minVector(), max = (*it)->maxVector();
+        else if (max[data.axis] < data.pos)
+        {
+            abox.setA(abox.getA().min(min));
+            abox.setB(abox.getB().max(max));
+            f(0, it, end);
+            a++;
+            continue;
+        }
+
+        float areaA = abox.area(), areaB = bbox.area();
         BoundingBox anew = abox;
-        anew.setA(abox.getA().max(max));
-        anew.setB(abox.getB().min(min));
+        anew.setA(abox.getA().min(min));
+        anew.setB(abox.getB().max(max));
         float areaNewA = anew.area();
         BoundingBox bnew = bbox;
-        bnew.setA(bbox.getA().max(max));
-        bnew.setB(bbox.getB().min(min));
+        bnew.setA(bbox.getA().min(min));
+        bnew.setB(bbox.getB().max(max));
         float areaNewB = bnew.area();
-        float costa = cost(areaNewA, a.size() + 1, areaB, b.size(), areaCinv);
-        float costb = cost(areaA, a.size(), areaNewB, b.size() + 1, areaCinv);
+        float costa = cost(areaNewA, a + 1, areaB, b, areaCinv);
+        float costb = cost(areaA, a, areaNewB, b + 1, areaCinv);
         if (costa < costb)
         {
             abox = anew;
-            areaA = areaNewA;
-            a.push_back(*it);
+            f(0, it, end);
+            a++;
         }
         else
         {
             bbox = bnew;
-            areaB = areaNewB;
-            b.push_back(*it);
+            f(1, it, end);
+            b++;
         }
     }
+}
+
+void BVH::buildLeaf(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, BVH::BBoxNode *prev_node)
+{
+    prev_node->objs = new std::vector<IntersectObjects>();
+    prev_node->objs->resize(NB_OBJS);
+    for (ObjectsWithBoxes::iterator it = begin; it != end; ++it)
+    {
+        (*prev_node->objs)[it->obj->type()].plain.push_back(it->obj->ptr());
+    }
+    (*prev_node->objs)[TRIANGLE].sse_preprocessed = Triangle::preProcess((*prev_node->objs)[TRIANGLE].plain);
+}
+
+void BVH::recBuildBBox(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, BVH::BBoxNode *prev_node, int depth)
+{
+    if (end - begin <= SIZE_LEAF)
+    {
+        buildLeaf(begin, end, prev_node);
+        return;
+    }
+    BoundingBox abox;
+    BoundingBox bbox;
+    float areaCinv = 1.f / prev_node->box.area();
+    AxisData minsplit;
+    minsplit.axis = -1;
+    minsplit.cost = INF;
+    for (int axis = 0; axis < 3; ++axis)
+    {
+        AxisData data;
+        data.lowest = prev_node->box.getA()[axis];
+        data.highest = prev_node->box.getB()[axis];
+        if (data.lowest > data.highest)
+            std::swap(data.lowest, data.highest);
+        data.interval = (data.highest - data.lowest) / 4;
+        data.axis = axis;
+        for (data.pos = data.lowest + data.interval; data.pos < data.highest; data.pos += data.interval)
+        {
+            int cnts[2] = {0, 0};
+            splitBox(data, abox, bbox, begin, end, areaCinv, [&](int n, ObjectsWithBoxes::iterator &it, ObjectsWithBoxes::iterator &)
+            {
+                cnts[n]++;
+                ++it;
+            });
+            data.cost = cost(abox.area(), cnts[0], bbox.area(), cnts[1], areaCinv);
+            minsplit = std::min(minsplit, data);
+        }
+    }
+    if (minsplit.axis == -1)
+    {
+        buildLeaf(begin, end, prev_node);
+        return;
+    }
+    ObjectsWithBoxes::iterator middle = begin, last = begin + (end - begin - 1);
+    splitBox(minsplit, abox, bbox, begin, end, areaCinv, [&](int n, ObjectsWithBoxes::iterator &it, ObjectsWithBoxes::iterator &curend)
+    {
+        if (n == 0)
+        {
+            ++it;
+            ++middle;
+        }
+        else
+        {
+            std::swap(*it, *last);
+            --last;
+            curend = last + 1;
+        }
+    });
     prev_node->a = new BBoxNode;
     prev_node->a->box = abox;
     prev_node->b = new BBoxNode;
     prev_node->b->box = bbox;
-    recBuildBBox(&a, prev_node->a);
-    recBuildBBox(&b, prev_node->b);
+    if (1 << depth <= nCpus())
+    {
+        boost::thread t([&]() {recBuildBBox(begin, middle, prev_node->a, depth + 1);});
+        recBuildBBox(middle, end, prev_node->b, depth + 1);
+        t.join();
+    }
+    else
+    {
+        recBuildBBox(begin, middle, prev_node->a, depth + 1);
+        recBuildBBox(middle, end, prev_node->b, depth + 1);
+    }
 }
 
-BoundingBox BVH::objectBox(Objects *objs)
+BoundingBox BVH::objectBox(ObjectsWithBoxes *objs)
 {
     Vector3 min = Vector3(INF, INF, INF);
     Vector3 max = Vector3(-INF, -INF, -INF);
-    for (Objects::const_iterator it = objs->begin(); it != objs->end(); ++it)
+    for (ObjectsWithBoxes::const_iterator it = objs->begin(); it != objs->end(); ++it)
     {
-        min = min.min((*it)->minVector());
-        max = max.max((*it)->maxVector());
+        min = min.min(it->min);
+        max = max.max(it->max);
     }
     return BoundingBox(min, max);
 }
@@ -103,20 +191,31 @@ void
 BVH::build(Objects * objs)
 {
     // construct the bounding volume hierarchy
+
+    ObjectsWithBoxes objs_boxes;
+    std::transform(objs->begin(), objs->end(), std::back_inserter(objs_boxes), [](Object *o) -> ObjectWithBox
+    {
+        ObjectWithBox res;
+        res.min = o->minVector();
+        res.max = o->maxVector();
+        res.obj = o;
+        return res;
+    });
+
     m_root = new BBoxNode;
-    m_root->box = objectBox(objs);
-    recBuildBBox(objs, m_root);
+    m_root->box = objectBox(&objs_boxes);
+    recBuildBBox(objs_boxes.begin(), objs_boxes.end(), m_root);
     //printHierarchy(m_root, 0);
 
     m_objects = objs;
 
     // OBSOLETE: start
-    m_categories_objects.resize(NB_OBJS);
-    for (size_t i = 0; i < m_objects->size(); ++i)
-    {
-        m_categories_objects[(*m_objects)[i]->type()].plain.push_back((*m_objects)[i]->ptr());
-    }
-    m_categories_objects[TRIANGLE].sse_preprocessed = Triangle::preProcess(m_categories_objects[TRIANGLE].plain);
+    //m_categories_objects.resize(NB_OBJS);
+    //for (size_t i = 0; i < m_objects->size(); ++i)
+    //{
+    //    m_categories_objects[(*m_objects)[i]->type()].plain.push_back((*m_objects)[i]->ptr());
+    //}
+    //m_categories_objects[TRIANGLE].sse_preprocessed = Triangle::preProcess(m_categories_objects[TRIANGLE].plain);
     // OBSOLETE: stop
 
     m_intersect_fcts.resize(NB_OBJS);
