@@ -17,7 +17,7 @@
 
 static float costNTris(int n)
 {
-    return ((n / 4) + (n % 4 != 0)) * CTRI;
+  return n * CTRI;
 }
 
 static float cost(float areaA, int objA, float areaB, int objB, float areaCinv)
@@ -38,7 +38,7 @@ void BVH::splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, O
     {
         Vector3 const &min = it->min;
         Vector3 const &max = it->max;
-        if (min[data.axis] > data.pos)
+        if (min[data.axis] > data.pos || (max[data.axis] > data.pos && max[data.axis] - data.pos > data.pos - min[data.axis]))
         {
             bbox.setA(bbox.getA().min(min));
             bbox.setB(bbox.getB().max(max));
@@ -46,37 +46,13 @@ void BVH::splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, O
             b++;
             continue;
         }
-        else if (max[data.axis] < data.pos)
+        else
         {
             abox.setA(abox.getA().min(min));
             abox.setB(abox.getB().max(max));
             f(0, it, end);
             a++;
             continue;
-        }
-
-        float areaA = abox.area(), areaB = bbox.area();
-        BoundingBox anew = abox;
-        anew.setA(abox.getA().min(min));
-        anew.setB(abox.getB().max(max));
-        float areaNewA = anew.area();
-        BoundingBox bnew = bbox;
-        bnew.setA(bbox.getA().min(min));
-        bnew.setB(bbox.getB().max(max));
-        float areaNewB = bnew.area();
-        float costa = cost(areaNewA, a + 1, areaB, b, areaCinv);
-        float costb = cost(areaA, a, areaNewB, b + 1, areaCinv);
-        if (costa < costb)
-        {
-            abox = anew;
-            f(0, it, end);
-            a++;
-        }
-        else
-        {
-            bbox = bnew;
-            f(1, it, end);
-            b++;
         }
     }
 }
