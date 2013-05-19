@@ -6,7 +6,8 @@
 #include <float.h>
 #include <iostream>
 
-#define EPSILON 0.00001f
+#define EPSILON 0.0001f
+#define INF std::numeric_limits<float>::infinity()
 
 #ifdef WIN32
 #pragma warning(disable:4305) // disable useless warnings

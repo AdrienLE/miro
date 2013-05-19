@@ -97,7 +97,7 @@ a1_makeTeapotScene()
     light->setBlur(0.6, 10);
     light->setWattage(500);
     g_scene->addLight(light);
-    g_scene->setAntiAliasing(2, 2);
+    g_scene->setAntiAliasing(25, 25);
 
     Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.2f)), 0.2);
     mat->setDiffuseProportion(0.8);

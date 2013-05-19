@@ -13,7 +13,7 @@
 
 #define CBOX 1.f
 #define CTRI 1.f
-#define SIZE_LEAF 4
+#define SIZE_LEAF 8
 
 static float costNTris(int n)
 {
@@ -25,7 +25,7 @@ static float cost(float areaA, int objA, float areaB, int objB, float areaCinv)
     return 2 * CBOX + (areaA * costNTris(objA) + areaB * costNTris(objB)) * areaCinv;
 }
 
-void BVH::splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, float areaCinv, std::function<void (int, ObjectsWithBoxes::iterator &, ObjectsWithBoxes::iterator &)> f)
+void BVH::splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, float areaCinv, boost::function<void (int, ObjectsWithBoxes::iterator &, ObjectsWithBoxes::iterator &)> f)
 {
     Vector3 v(INF);
     abox.setA(v);
@@ -88,7 +88,9 @@ void BVH::recBuildBBox(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::itera
         data.highest = prev_node->box.getB()[axis];
         if (data.lowest > data.highest)
             std::swap(data.lowest, data.highest);
-        data.interval = (data.highest - data.lowest) / 4;
+        data.interval = (data.highest - data.lowest) / 5;
+        if (data.interval < EPSILON)
+            continue;
         data.axis = axis;
         for (data.pos = data.lowest + data.interval; data.pos < data.highest; data.pos += data.interval)
         {
@@ -203,39 +205,46 @@ BVH::build(Objects * objs)
 bool
 BVH::rec_intersect(BBoxNode *node, HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 {
-	bool hit = false;
-	HitInfo tempMinHit;
-	minHit.t = MIRO_TMAX;
+    bool hit = false;
+    HitInfo tempMinHit;
+    minHit.t = MIRO_TMAX;
 
-	if (node->a == NULL && node->b == NULL)
-	{
-		for (size_t i = 0; i < NB_OBJS; ++i)
-		{
-			if (m_intersect_fcts[i] && m_intersect_fcts[i]((*node->objs)[i], tempMinHit, ray, tMin, tMax) && tempMinHit.t < minHit.t)
-			{
-				minHit = tempMinHit;
-				hit = true;
-			}
-		}
+    if (node->a == NULL && node->b == NULL)
+    {
+        for (size_t i = 0; i < NB_OBJS; ++i)
+        {
+            if (m_intersect_fcts[i] && m_intersect_fcts[i]((*node->objs)[i], tempMinHit, ray, tMin, tMax) && tempMinHit.t < minHit.t)
+            {
+                minHit = tempMinHit;
+                hit = true;
+            }
+        }
 
-	}
-	else
+    }
+    else
+    {
+        if (node->a && node->a->box.doIntersect(tempMinHit, ray, tMin, tMax))
+        {
+            hit = rec_intersect(node->a, minHit, ray, tMin, tMax);
+        }
+        if (node->b && node->b->box.doIntersect(tempMinHit, ray, tMin, tMax))
+        {
+            bool tmpHit = rec_intersect(node->b, tempMinHit, ray, tMin, tMax);
+            if (tmpHit && (!hit || (hit && tempMinHit.t < minHit.t)))
+            {
+                minHit = tempMinHit;
+                hit = true;
+            }
+        }
+    }
+    if (hit)
+    {
+        if (minHit.N.dot(ray.d) > 0)
 	{
-		if (node->a && node->a->box.doIntersect(tempMinHit, ray, tMin, tMax))
-		{
-			hit = rec_intersect(node->a, minHit, ray, tMin, tMax);
-		}
-		if (node->b && node->b->box.doIntersect(tempMinHit, ray, tMin, tMax))
-		{
-			bool tmpHit = rec_intersect(node->b, tempMinHit, ray, tMin, tMax);
-			if (tmpHit && (!hit || (hit && tempMinHit.t < minHit.t)))
-			{
-				minHit = tempMinHit;
-				hit = true;
-			}
-		}
+            minHit.N.negate();
 	}
-	return hit;
+    }
+    return hit;
 }
 
 bool
@@ -248,5 +257,5 @@ BVH::intersect(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
     HitInfo tempMinHit;
     minHit.t = MIRO_TMAX;
 
-	return rec_intersect(m_root, minHit, ray, tMin, tMax);
+    return rec_intersect(m_root, minHit, ray, tMin, tMax);
 }

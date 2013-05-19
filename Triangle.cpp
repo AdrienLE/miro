@@ -234,21 +234,32 @@ void * Triangle::preProcess( std::vector<void *> &objects )
     // simple, fast, and works well in practice.
     if (!sse_info.hasSSE())
         return 0;
-    SSETriangle *tris = new SSETriangle[objects.size() / 4];
-    Triangleref *refs = new Triangleref[objects.size() / 4];
+    size_t sse_size = objects.size() / 4 + (objects.size() % 4 != 0);
+    SSETriangle *tris = new SSETriangle[sse_size];
+    Triangleref *refs = new Triangleref[sse_size];
     TmpTriangle triangles[4];
     int cur_in_four = 0;
     int cur = 0;
-    for (int i = objects.size() % 4; i < objects.size(); ++i)
+    for (int i = 0; i < objects.size() + (objects.size() % 4 ? 4 - objects.size() % 4 : 0); ++i)
     {
-        Triangle *tri = (Triangle *)objects[i];
-        Vector3 *vs = tri->m_mesh->vertices();
-        TriangleMesh::TupleI3 *vi = tri->m_mesh->vIndices();
+        if (i < objects.size())
+        {
+            Triangle *tri = (Triangle *)objects[i];
+            Vector3 *vs = tri->m_mesh->vertices();
+            TriangleMesh::TupleI3 *vi = tri->m_mesh->vIndices();
 
-        triangles[cur_in_four].points[0] = vs[vi[tri->m_index].x];
-        triangles[cur_in_four].points[1] = vs[vi[tri->m_index].y] - vs[vi[tri->m_index].x];
-        triangles[cur_in_four].points[2] = vs[vi[tri->m_index].z] - vs[vi[tri->m_index].x];
-        refs[cur].tri[cur_in_four] = tri;
+            triangles[cur_in_four].points[0] = vs[vi[tri->m_index].x];
+            triangles[cur_in_four].points[1] = vs[vi[tri->m_index].y] - vs[vi[tri->m_index].x];
+            triangles[cur_in_four].points[2] = vs[vi[tri->m_index].z] - vs[vi[tri->m_index].x];
+            refs[cur].tri[cur_in_four] = tri;
+        }
+        else
+        {
+            triangles[cur_in_four].points[0] = Vector3(-INF);
+            triangles[cur_in_four].points[1] = Vector3(-INF);
+            triangles[cur_in_four].points[2] = Vector3(-INF);
+            refs[cur].tri[cur_in_four] = 0;
+        }
 
         cur_in_four++;
         if (cur_in_four >= 4)
@@ -261,7 +272,6 @@ void * Triangle::preProcess( std::vector<void *> &objects )
         }
     }
 
-    int old_size = objects.size();
-    objects.resize(objects.size() % 4);
-    return new SSETriangles(tris, refs, old_size / 4);
+    objects.clear();
+    return new SSETriangles(tris, refs, sse_size);
 }

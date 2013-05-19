@@ -8,11 +8,11 @@ MKDEP		= @mkdep
 ECHO		= @echo
 INCDIRS		= -I/usr/X11R6/include 
 #use the following LIBS line for GNU/Linux
-LIBS	 	= -lm -lX11 -lXmu -lXi -lXext -lGL -lGLU -lglut -lboost_thread -lboost_system -lboost_exception -lboost_timer -lpthread
+LIBS	 	= -lm -lX11 -lXmu -lXi -lXext -lGL -lGLU -lglut -lboost_thread-mt -lboost_system-mt -lboost_exception-mt -lboost_timer-mt -lpthread
 #use this one instead for Mac OSX
 #LIBS		= -lm -framework GLUT --lobjc -framework OpenGL
 LIBDIRS 	= -L. -L/usr/X11R6/lib
-LDFLAGS		= $(LIBDIRS) $(LIBS)
+LDFLAGS		= $(LIBDIRS) $(LIBS) 
 CFLAGS          = $(INCDIRS) -march=native -std=c++11 -O3 \
 -Wno-deprecated -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -g
 

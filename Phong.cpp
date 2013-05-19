@@ -22,9 +22,7 @@ Vector3
 Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 {
     Vector3 L = Vector3(0.0f, 0.0f, 0.0f);
-    
-    const Vector3 viewDir = -ray.d; // d is a unit vector
-    
+        
     const Lights *lightlist = scene.lights();
     
     // loop over all of the lights
@@ -35,30 +33,41 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     {
         PointLight* pLight = *lightIter;
 
-        Vector3 l = pLight->position() - hit.P;
-
         float shadow_mul = 0.f;
 
-        for (int i = 0; i < pLight->samples(); ++i)
+        Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
+        Vector3 tolight = pLight->position() - hit.P;
+        tolight.normalize();
+        Vector3 xaxis = randvect.cross(tolight);
+        xaxis.normalize();
+        Vector3 yaxis = xaxis.cross(tolight);
+        yaxis.normalize();
+        float xdisk, ydisk;
+        do
         {
-            Ray lightray;
-            lightray.d = (((pLight->sphere()*(Vector3(randone(), randone(), randone())-Vector3(0.5)))+pLight->position()) - hit.P).normalized();
-            lightray.o = hit.P;
-            float remaininglength = l.length();
-            while (true)
-            {
-                HitInfo lighthit;
+            xdisk = 1 - 2*randone(g_rng);
+            ydisk = 1 - 2*randone(g_rng);
+        } while (xdisk*xdisk + ydisk*ydisk > 1);
+        Vector3 posinlight = pLight->position() + xdisk*pLight->sphere()*xaxis + ydisk*pLight->sphere()*yaxis;
+        Ray lightray;
+        lightray.d = (posinlight - hit.P);
+        float raylength = lightray.d.length();
+        float remaininglength = raylength;
+        lightray.d /= raylength;
+        lightray.o = hit.P;
+        while (true)
+        {
+            HitInfo lighthit;
 
-                if (!scene.trace(lighthit, lightray, EPSILON, remaininglength))
-                {
-                    shadow_mul += 1.f/pLight->samples();
-                    break;
-                }
-                if (lighthit.material->castShadow())
-                    break;
-                remaininglength -= lighthit.t;
-                lightray.o = lighthit.P;
+            if (!scene.trace(lighthit, lightray, EPSILON, remaininglength))
+            {
+                shadow_mul = 1;
+                break;
             }
+            if (lighthit.material->castShadow())
+                break;
+            remaininglength -= lighthit.t;
+            lightray.o = lighthit.P;
         }
 
         if (shadow_mul < EPSILON)
@@ -68,27 +77,27 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         Vector3 result = pLight->color()*shadow_mul;
 
         // the inverse-squared falloff
-        float falloff = l.length2();
+        float falloff = raylength*raylength;
 
         // normalize the light direction
-        l /= sqrt(falloff);
 
-        float nDotL = dot(hit.N, l);
+        float nDotL = dot(hit.N, lightray.d);
 
         if (m_dp > EPSILON)
         {
-            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result * diffcolor * m_dp;
+            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / (4 * PI)) * result * diffcolor * m_dp;
         }
         if (m_phongp > EPSILON && nDotL > 0)
         {
-            Vector3 normal = hit.N;
-            Vector3 refl = -l + 2*nDotL*hit.N;
+            Vector3 refl = -lightray.d + 2*nDotL*hit.N;
             L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor * m_phongp;
             //Vector3 half = -ray.d + hit.N;
             //half.normalize();
             //L += std::max(0.f, powf(half.dot(hit.N), 1000)) * result * speccolor * m_sp;
         }
     }
+
+
 
     if (m_sp > EPSILON && ray.iter < MAX_RAY_ITER)
     {

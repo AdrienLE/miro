@@ -12,14 +12,18 @@
 
 inline int nCpus()
 {
+    static int n = -1;
+    if (n == -1) {
 #ifdef WIN32
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo( &sysinfo );
+        SYSTEM_INFO sysinfo;
+        GetSystemInfo( &sysinfo );
 
-    return sysinfo.dwNumberOfProcessors;
+        n = sysinfo.dwNumberOfProcessors;
 #else
-    return sysconf( _SC_NPROCESSORS_ONLN );
+        n = sysconf( _SC_NPROCESSORS_ONLN );
 #endif
+    }
+    return n;
 }
 
 #if defined(__GNUC__) && defined(SSE)

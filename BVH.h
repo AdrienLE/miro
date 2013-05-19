@@ -5,6 +5,7 @@
 #include "Object.h"
 #include "BoundingBox.h"
 #include "IntersectObjects.h"
+#include <boost/function.hpp>
 
 class BVH
 {
@@ -49,7 +50,7 @@ protected:
     };
     typedef std::vector<ObjectWithBox> ObjectsWithBoxes;
 
-    void splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, float areaCinv, std::function<void (int, ObjectsWithBoxes::iterator &, ObjectsWithBoxes::iterator &)> f);
+    void splitBox(AxisData const &data, BoundingBox &abox, BoundingBox &bbox, ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, float areaCinv, boost::function<void (int, ObjectsWithBoxes::iterator &, ObjectsWithBoxes::iterator &)> f);
     void buildLeaf(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, BVH::BBoxNode *prev_node);
 
 	void recBuildBBox(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::iterator end, BVH::BBoxNode *prev_node, int depth = 0);

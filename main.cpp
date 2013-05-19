@@ -14,6 +14,9 @@
 #include "assignment1.h"
 #include "assignment2.h"
 
+boost::mt19937 g_rng;
+boost::uniform_01<float> randone;
+
 void
 makeSpiralScene()
 {
@@ -126,7 +129,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-	makeBunny20Scene();
+	makeSponzaScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();

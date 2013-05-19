@@ -2,6 +2,7 @@
 #define __MIRO_H__
 
 #include <boost/shared_ptr.hpp>
+#include <boost/random.hpp>
 
 using boost::shared_ptr;
 
@@ -42,9 +43,7 @@ extern Camera* g_camera;
 extern Scene* g_scene;
 extern Image* g_image;
 
-inline float randone()
-{
-    return ((float)rand())/RAND_MAX;
-}
+extern boost::mt19937 g_rng;
+extern boost::uniform_01<float> randone;
 
 #endif

@@ -239,9 +239,10 @@ makeBunny20Scene()
     light->setColor(Vector3(1, 1, 1));
     light->setWattage(1000);
     g_scene->addLight(light);
+    g_scene->setAntiAliasing(2, 2);
 
     TriangleMesh * mesh;
-    Material* material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
+    Phong* material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
     Matrix4x4 xform;
     Matrix4x4 xform2;
     xform2 *= rotate(110, 0, 1, 0);
@@ -254,7 +255,7 @@ makeBunny20Scene()
     xform *= translate(-1, .4, .3);
     xform *= rotate(25, .3, .1, .6);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 2
@@ -262,7 +263,7 @@ makeBunny20Scene()
     xform *= scale(.6, 1.2, .9);
     xform *= translate(7.6, .8, .6);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 3
@@ -270,14 +271,14 @@ makeBunny20Scene()
     xform *= translate(.7, 0, -2);
     xform *= rotate(120, 0, .6, 1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 4
     xform.setIdentity();
     xform *= translate(3.6, 3, -1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 5
@@ -285,7 +286,7 @@ makeBunny20Scene()
     xform *= translate(-2.4, 2, 3);
     xform *= scale(1, .8, 2);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 6
@@ -293,7 +294,7 @@ makeBunny20Scene()
     xform *= translate(5.5, -.5, 1);
     xform *= scale(1, 2, 1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 7
@@ -302,7 +303,7 @@ makeBunny20Scene()
     xform *= translate(-4, -.5, -6);
     xform *= scale(1, 2, 1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 8
@@ -310,7 +311,7 @@ makeBunny20Scene()
     xform *= rotate(60, 0, 1, 0);
     xform *= translate(5, .1, 3);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 9
@@ -318,7 +319,7 @@ makeBunny20Scene()
     xform *= translate(-3, .4, 6);
     xform *= rotate(-30, 0, 1, 0);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 10
@@ -327,7 +328,7 @@ makeBunny20Scene()
     xform *= rotate(180, 0, 1, 0);
     xform *= scale(1.5, 1.5, 1.5);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 11
@@ -336,7 +337,7 @@ makeBunny20Scene()
     xform *= translate(-1, .4, .3);
     xform *= rotate(25, .3, .1, .6);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 12
@@ -344,7 +345,7 @@ makeBunny20Scene()
     xform *= scale(.6, 1.2, .9);
     xform *= translate(7.6, .8, .6);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 13
@@ -352,14 +353,14 @@ makeBunny20Scene()
     xform *= translate(.7, 0, -2);
     xform *= rotate(120, 0, .6, 1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 14
     xform = xform2;
     xform *= translate(3.6, 3, -1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 15
@@ -367,7 +368,7 @@ makeBunny20Scene()
     xform *= translate(-2.4, 2, 3);
     xform *= scale(1, .8, 2);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 16
@@ -375,7 +376,7 @@ makeBunny20Scene()
     xform *= translate(5.5, -.5, 1);
     xform *= scale(1, 2, 1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 17
@@ -384,7 +385,7 @@ makeBunny20Scene()
     xform *= translate(-4, -.5, -6);
     xform *= scale(1, 2, 1);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 18
@@ -392,7 +393,7 @@ makeBunny20Scene()
     xform *= rotate(60, 0, 1, 0);
     xform *= translate(5, .1, 3);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 19
@@ -400,7 +401,7 @@ makeBunny20Scene()
     xform *= translate(-3, .4, 6);
     xform *= rotate(-30, 0, 1, 0);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
     // bunny 20
@@ -409,7 +410,7 @@ makeBunny20Scene()
     xform *= rotate(180, 0, 1, 0);
     xform *= scale(1.5, 1.5, 1.5);
     mesh = new TriangleMesh;
-    mesh->load("bunny.obj", xform);
+    mesh->load("bunny_smooth.obj", xform);
     addMeshTrianglesToScene(mesh, material);
 
 
@@ -449,6 +450,7 @@ makeSponzaScene()
     g_camera->setLookAt(Vector3(0, 2.5, -1));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(55);
+    g_scene->setAntiAliasing(10, 10);
 
     // create and place a point light source
     PointLight * light = new PointLight;
