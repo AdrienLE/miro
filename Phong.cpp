@@ -2,15 +2,15 @@
 #include "Ray.h"
 #include "Scene.h"
 
-Phong::Phong(const Vector3 & color, const Vector3 &ks, const Vector3 &ka): m_kd(new Material(color)), m_ks(new Material(ks)), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_phongp(0)
+Phong::Phong(const Vector3 & color, const Vector3 &ks, const Vector3 &ka): m_kd(new Material(color)), m_ks(new Material(ks)), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_phongp(0), m_indirect(true)
 {
 }
 
-Phong::Phong(shared_ptr<Material> kd, shared_ptr<Material> ks, const Vector3 &ka) : m_kd(kd), m_ks(ks), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1)
+Phong::Phong(shared_ptr<Material> kd, shared_ptr<Material> ks, const Vector3 &ka) : m_kd(kd), m_ks(ks), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_indirect(true)
 {
 }
 
-Phong::Phong(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ks(new Material(Vector3(1))), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1)
+Phong::Phong(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ks(new Material(Vector3(1))), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_indirect(true)
 {
 }
 
@@ -85,7 +85,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
         if (m_dp > EPSILON)
         {
-            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / (4 * PI)) * result * diffcolor * m_dp;
+            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result * diffcolor * m_dp;
         }
         if (m_phongp > EPSILON && nDotL > 0)
         {
@@ -98,7 +98,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     }
 
 	// Indirect diffuse sampling (method 2)
-	if (m_dp > EPSILON && ray.iter < MAX_RAY_ITER)
+	if (m_indirect && m_dp > EPSILON && ray.iter < MAX_RAY_ITER)
 	{
 		float theta = asinf((randone(g_rng)));
 		float phi = 2 * PI * randone(g_rng);
@@ -115,6 +115,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 		diffuse_ray.d += sinf(theta) * cosf(phi) * xaxis;
 		diffuse_ray.d += sinf(theta) * sinf(phi) * zaxis;
 		diffuse_ray.d += cosf(theta) * yaxis;
+        diffuse_ray.d.normalize();
 
 		HitInfo diff_hit;
 		Vector3 diff_res;

@@ -11,13 +11,13 @@
 
 #define INF std::numeric_limits<float>::infinity()
 
-#define CBOX 1.f
+#define CBOX 4.f
 #define CTRI 1.f
 #define SIZE_LEAF 8
 
 static float costNTris(int n)
 {
-  return n * CTRI;
+  return (n / 4 + (n % 4 != 0)) * CTRI;
 }
 
 static float cost(float areaA, int objA, float areaB, int objB, float areaCinv)
@@ -88,7 +88,7 @@ void BVH::recBuildBBox(ObjectsWithBoxes::iterator begin, ObjectsWithBoxes::itera
         data.highest = prev_node->box.getB()[axis];
         if (data.lowest > data.highest)
             std::swap(data.lowest, data.highest);
-        data.interval = (data.highest - data.lowest) / 5;
+        data.interval = (data.highest - data.lowest) / 10;
         if (data.interval < EPSILON)
             continue;
         data.axis = axis;
@@ -240,9 +240,9 @@ BVH::rec_intersect(BBoxNode *node, HitInfo& minHit, const Ray& ray, float tMin, 
     if (hit)
     {
         if (minHit.N.dot(ray.d) > 0)
-	{
+        {
             minHit.N.negate();
-	}
+        }
     }
     return hit;
 }

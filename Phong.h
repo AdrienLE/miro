@@ -15,6 +15,7 @@ public:
     void setSpecularProportion(float f) {m_sp = f;}
     void setPhong(float f, float prop) {m_phong = f; m_phongp = prop;}
     void setRefraction(float indice, float proportion) {m_refr = indice; m_tp = proportion;}
+    void setIndirectLighting(bool value) {m_indirect = value;}
 
     virtual void preCalc() {}
     
@@ -30,6 +31,7 @@ protected:
     float m_phong;
     float m_refr;
     float m_phongp;
+    bool m_indirect;
 };
 
 #endif // CSE168_LAMBERT_H_INCLUDED

@@ -48,7 +48,11 @@ extern boost::mt19937 g_rng;
 
 inline float randone(const boost::mt19937& g_rng)
 {
-	return ((float)rand())/RAND_MAX;
+#ifdef WIN32
+    return ((float)rand())/RAND_MAX;
+#else
+	return drand48();
+#endif
 }
 
 #endif

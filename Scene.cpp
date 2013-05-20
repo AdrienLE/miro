@@ -49,11 +49,12 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
     HitInfo hitInfo;
     Vector3 shadeResult;
     std::vector<float> refr_stack;
+    std::vector<Vector3> colors(m_samples);
     for (int i = 0; i < img->width(); ++i)
     {
-        for (int k = 0; k < m_antialiasing.size(); ++k)
+        for (int k = 0; k < m_samples; ++k)
         {
-            ray = cam->eyeRay(i + m_antialiasing[k].x, j + m_antialiasing[k].y, img->width(), img->height());
+            ray = cam->eyeRay(i + (m_samples == 1 ? 0.5f : randone(g_rng) - 0.5f), j + (m_samples == 1 ? 0.5f : randone(g_rng) - 0.5f), img->width(), img->height());
             refr_stack.clear();
             refr_stack.push_back(1.f);
             ray.refractionStack = &refr_stack;
@@ -62,35 +63,38 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
                 results[i] = new Vector3();
             if (trace(hitInfo, ray))
             {
-                *results[i] += hitInfo.material->shade(ray, hitInfo, *this);
+                colors[k] = hitInfo.material->shade(ray, hitInfo, *this);
             }
             else
             {
-                *results[i] += bgColor();
+                colors[k] = bgColor();
             }
+            *results[i] += colors[k];
+        }
+        if (m_cutoffs > 0)
+        {
+            std::vector<int> biggest(m_cutoffs, -1);
+            for (int c = 0; c < m_cutoffs; ++c)
+            {
+                if (biggest[0] == -1 || colors[c].length2() > colors[biggest[0]].length2())
+                {
+                    biggest[0] = c;
+                    for (int k = 1; k < m_cutoffs; ++k)
+                    {
+                        if (biggest[k] == -1 || colors[biggest[k - 1]].length2() > colors[biggest[k]].length2())
+                            std::swap(biggest[k - 1], biggest[k]);
+                        else
+                            break;
+                    }
+                }
+            }
+            for (int k = 0; k < m_cutoffs; ++k)
+                *results[i] -= colors[biggest[k]];
         }
         if (results[i])
-            *results[i] /= m_antialiasing.size();
+            *results[i] /= m_samples - m_cutoffs;
     }
     return results;
-}
-
-void Scene::setAntiAliasing(int x, int y)
-{
-    m_antialiasing.clear();
-    for (int i = 0; i < x; ++i)
-        for (int j = 0; j < y; ++j)
-            m_antialiasing.push_back(Vector2(((float)i)/x - 0.5f, ((float)j)/y - 0.5f));
-    // Wikipedia says these constants are good...
-    const float angle = atanf(0.5f);
-    const float scale = sqrtf(5.f)/2.f;
-    for (int i = 0; i < m_antialiasing.size(); ++i)
-    {
-        Vector2 n;
-        n.x = (m_antialiasing[i].x * cosf(angle) - m_antialiasing[i].y * sinf(angle)) * scale;
-        n.y = (m_antialiasing[i].x * sin(angle) + m_antialiasing[i].y * cosf(angle)) * scale;
-        m_antialiasing[i] = n;
-    }
 }
 
 void

@@ -12,7 +12,7 @@ class Image;
 class Scene
 {
 public:
-    Scene() : m_bgColor(0) {setAntiAliasing(1, 1);}
+    Scene() : m_bgColor(0), m_samples(1), m_cutoffs(0) {}
 
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}
     const Objects* objects() const      {return &m_objects;}
@@ -28,12 +28,18 @@ public:
 
     inline const Vector3 & bgColor() const  {return m_bgColor;}
 
+    inline void setSamples(int n) { m_samples = n; }
+    inline int samples() const { return m_samples; }
+
+    inline void setAntiAliasing(int a, int b) { m_samples = a * b; }
+
+    inline void setCutoffs(int n) { m_cutoffs = n; }
+    inline int cutoffs() const { return m_cutoffs; }
+
 
     void raytraceImage(Camera *cam, Image *img);
     bool trace(HitInfo& minHit, const Ray& ray,
                float tMin = 0.0f, float tMax = MIRO_TMAX) const;
-
-    void setAntiAliasing(int x, int y);
 
 protected:
     std::vector<Vector3 *> traceLine(Camera const *cam, Image const *img, int j) const;
@@ -44,14 +50,9 @@ protected:
     Objects m_objects;
     BVH m_bvh;
     Lights m_lights;
-    struct Vector2
-    {
-        float x;
-        float y;
-        Vector2(float _x, float _y) : x(_x), y(_y) {}
-        Vector2() {}
-    };
-    std::vector<Vector2> m_antialiasing;
+
+    int m_samples;
+    int m_cutoffs;
 };
 
 extern Scene * g_scene;
