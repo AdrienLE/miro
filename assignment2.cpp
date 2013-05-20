@@ -12,6 +12,7 @@
 #include "Phong.h"
 #include "CellularStoneTexture.h"
 #include "Box.h"
+#include "Sphere.h"
 
 // local helper function declarations
 namespace
@@ -38,17 +39,26 @@ makeSpecialScene()
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
+    g_scene->setAntiAliasing(10, 10);
+
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(10, 10, 10));
+    light->setPosition(Vector3(2, 5.3, -1.7));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(700);
+    light->setWattage(50);
+    light->setBlur(0.2, 0);
     g_scene->addLight(light);
 
-    Material* material = new Phong(1, 0, 0.2);
+    Material* material = new Phong(1, 0, 0);
     TriangleMesh * teapot = new TriangleMesh;
     teapot->load("cornell_box.obj");
     addMeshTrianglesToScene(teapot, material);
+
+    Sphere *sphere = new Sphere();
+    sphere->setCenter(light->position());
+    sphere->setRadius(light->sphere());
+    sphere->setMaterial(new Phong(Vector3(1, 0, 0), 0, 0));
+    //g_scene->addObject(sphere);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
