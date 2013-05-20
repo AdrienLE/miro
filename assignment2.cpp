@@ -47,7 +47,7 @@ makeSpecialScene()
 
     Material* material = new Phong(1, 0, 0.2);
     TriangleMesh * teapot = new TriangleMesh;
-    teapot->load("castle.obj");
+    teapot->load("cornell_box.obj");
     addMeshTrianglesToScene(teapot, material);
     
     // create the floor triangle
