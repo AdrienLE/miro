@@ -15,7 +15,7 @@
 #include "assignment2.h"
 
 boost::mt19937 g_rng;
-boost::uniform_01<float> randone;
+//boost::uniform_01<float> randone;
 
 void
 makeSpiralScene()

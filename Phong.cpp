@@ -29,13 +29,13 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     Lights::const_iterator lightIter;
     Vector3 diffcolor = m_kd->shade(ray, hit, scene);
     Vector3 speccolor = m_ks->shade(ray, hit, scene);
-    for (lightIter = lightlist->begin(); lightIter != lightlist->end(); lightIter++)
+	Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
+	for (lightIter = lightlist->begin(); lightIter != lightlist->end(); lightIter++)
     {
         PointLight* pLight = *lightIter;
 
         float shadow_mul = 0.f;
 
-        Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
         Vector3 tolight = pLight->position() - hit.P;
         tolight.normalize();
         Vector3 xaxis = randvect.cross(tolight);
@@ -97,7 +97,33 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         }
     }
 
+	// Indirect diffuse sampling (method 2)
+	if (m_dp > EPSILON && ray.iter < MAX_RAY_ITER)
+	{
+		float theta = asinf((randone(g_rng)));
+		float phi = 2 * PI * randone(g_rng);
 
+		Vector3 const &yaxis = hit.N;
+		Vector3 xaxis = yaxis.cross(randvect);
+		xaxis.normalize();
+		Vector3 zaxis = yaxis.cross(xaxis);
+		zaxis.normalize();
+		Ray diffuse_ray;
+		diffuse_ray.iter = ray.iter + 1;
+		diffuse_ray.o = hit.P;
+		diffuse_ray.d = 0;
+		diffuse_ray.d += sinf(theta) * cosf(phi) * xaxis;
+		diffuse_ray.d += sinf(theta) * sinf(phi) * zaxis;
+		diffuse_ray.d += cosf(theta) * yaxis;
+
+		HitInfo diff_hit;
+		Vector3 diff_res;
+		if (scene.trace(diff_hit, diffuse_ray, EPSILON))
+			diff_res = diff_hit.material->shade(diffuse_ray, diff_hit, scene);
+		else
+			diff_res = scene.bgColor();
+		L += (m_dp / PI) * (diffcolor * diff_res);
+	}
 
     if (m_sp > EPSILON && ray.iter < MAX_RAY_ITER)
     {

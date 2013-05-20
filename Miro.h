@@ -44,6 +44,11 @@ extern Scene* g_scene;
 extern Image* g_image;
 
 extern boost::mt19937 g_rng;
-extern boost::uniform_01<float> randone;
+//extern boost::uniform_01<float> randone;
+
+inline float randone(const boost::mt19937& g_rng)
+{
+	return ((float)rand())/RAND_MAX;
+}
 
 #endif

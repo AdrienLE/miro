@@ -45,7 +45,7 @@ makeSpecialScene()
     PointLight * light = new PointLight;
     light->setPosition(Vector3(2, 5.3, -1.7));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(50);
+    light->setWattage(110);
     light->setBlur(0.2, 0);
     g_scene->addLight(light);
 
