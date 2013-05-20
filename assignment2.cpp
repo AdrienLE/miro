@@ -49,22 +49,6 @@ makeSpecialScene()
     TriangleMesh * teapot = new TriangleMesh;
     teapot->load("cornell_box.obj");
     addMeshTrianglesToScene(teapot, material);
-    
-    // create the floor triangle
-    TriangleMesh * floor = new TriangleMesh;
-    floor->createSingleTriangle();
-    floor->setV1(Vector3(-10, 0, -10));
-    floor->setV2(Vector3(  0, 0,  10));
-    floor->setV3(Vector3( 10, 0, -10));
-    floor->setN1(Vector3(0, 1, 0));
-    floor->setN2(Vector3(0, 1, 0));
-    floor->setN3(Vector3(0, 1, 0));
-    
-    Triangle* t = new Triangle;
-    t->setIndex(0);
-    t->setMesh(floor);
-    t->setMaterial(new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2)); 
-    g_scene->addObject(t);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
