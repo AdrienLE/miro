@@ -185,8 +185,9 @@ TriangleMesh::loadMtl(std::string file_name)
 		else // unknown argument
 		{
 			fprintf(stderr, "Unknown mtl argument '%s' in material file %s at line %i:\n\t%s\n",
-					current_token, file_name, line_number, current_line);
+					current_token, file_name.c_str(), line_number, current_line);
 		}
+    current_phong_mtl->setAmbient(0.4);
 	}
 	fclose(fp);
 }

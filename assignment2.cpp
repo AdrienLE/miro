@@ -45,13 +45,15 @@ makeFinalScene()
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(-10, 15, 10));
+    light->setPosition(Vector3(10, 15, -10));
     light->setColor(Vector3(1, 1, 1));
     light->setWattage(400);
     g_scene->addLight(light);
 
-    Phong* material = new Phong(1, 0.f, 0.2);
+    Phong* material = new Phong(1, 0.f, 0.4);
 	material->setIndirectLighting(false);
+
+    g_scene->setSamples(10);
 
 	Matrix4x4 mscale;
 	mscale.setIdentity();
@@ -93,19 +95,19 @@ makeSpecialScene()
     // set up the camera
     g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
     g_camera->setEye(Vector3(0, 3, 6));
-    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setLookAt(Vector3(3, 2.5, -1.5));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-    g_scene->setSamples(100);
+    g_scene->setSamples(1000);
     g_scene->setCutoffs(0);
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(3, 5.3, -3));
+    light->setPosition(Vector3(2.7, 5.6, -2.7));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(30);
-    light->setBlur(0.2, 0);
+    light->setWattage(50);
+    light->setBlur(0.1, 0);
     g_scene->addLight(light);
 
     Material* material = new Phong(0.9, 0, 0);
@@ -117,7 +119,7 @@ makeSpecialScene()
     sphere->setCenter(light->position());
     sphere->setRadius(light->sphere());
     sphere->setMaterial(new Phong(Vector3(1, 0, 0), 0, 0));
-    //g_scene->addObject(sphere);
+   // g_scene->addObject(sphere);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();

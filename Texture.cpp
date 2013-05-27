@@ -1,5 +1,7 @@
 #include "Texture.h"
+#include <boost/algorithm/clamp.hpp>
 using namespace boost::gil;
+using boost::algorithm::clamp;
 
 Texture::Texture(const std::string& texture_path)
 {
@@ -23,7 +25,7 @@ Texture::loadTexture()
 	}
 	catch (std::exception &e)
 	{
-		printf("GIL: ('%s') %s\n", m_texture_path, e.what());
+		printf("GIL: ('%s') %s\n", m_texture_path.c_str(), e.what());
 		m_img_loaded = false;
 	}
 }
@@ -42,7 +44,8 @@ Texture::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 {
 	if (m_img_loaded)
 	{
-		boost::gil::rgb8_pixel_t pixel = m_img._view(hit.u, hit.v);
+		boost::gil::rgb8_pixel_t pixel = m_img._view((int) (fmodf(std::abs(hit.u), 1) * m_img.width()), (int) (fmodf(std::abs(hit.v), 1) * m_img.height()));
+		//return Vector3(1.f);
 		return Vector3(pixel[0] / 255.f, pixel[1] / 255.f, pixel[2] / 255.f);
 	}
 	else

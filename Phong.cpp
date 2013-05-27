@@ -109,7 +109,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 		Vector3 zaxis = yaxis.cross(xaxis);
 		zaxis.normalize();
 		Ray diffuse_ray;
-		diffuse_ray.refractionIndex = ray.refractionIndex;
+        diffuse_ray.refractionIndex = ray.refractionIndex;
         diffuse_ray.refractionStack = ray.refractionStack;
 		diffuse_ray.iter = ray.iter + 1;
 		diffuse_ray.o = hit.P;

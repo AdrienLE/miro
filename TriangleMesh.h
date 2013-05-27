@@ -32,12 +32,20 @@ public:
     struct VectorR2
     {
         float x, y;
+
+        VectorR2() {}
+        VectorR2(float x, float y) : x(x), y(y) {}
+
+        VectorR2 operator+(VectorR2 const &v) {return VectorR2(x + v.x, y + v.y);}
+        VectorR2 operator*(float f) {return VectorR2(x * f, y * f);}
     };
 
     Vector3* vertices()     {return m_vertices;}
     Vector3* normals()      {return m_normals;}
+    VectorR2* uvs()         {return m_texCoords;}
     TupleI3* vIndices()     {return m_vertexIndices;}
     TupleI3* nIndices()     {return m_normalIndices;}
+    TupleI3* uvIndices()    {return m_texCoordIndices;}
     int numTris()           {return m_numTris;}
 	Material* getMaterialForId(int triangle_id);
 
