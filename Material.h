@@ -17,6 +17,7 @@ public:
 
     virtual bool castShadow() const {return m_castShadow;}
     virtual void setCastShadow(bool b) {m_castShadow = b;}
+	void setColor(const Vector3& color) { m_color = color; }
 
 protected:
 	Vector3 m_color;

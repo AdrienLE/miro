@@ -21,8 +21,13 @@ public:
     
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
-protected:
+	void setAmbient(const Vector3& ka) { m_ka = ka; }
+	void setTransparency(float tp) { m_tp = tp; }
+	void setReflection(float sp) { m_sp = sp; }
+	void setReflectionIndex(float refr) { m_refr = refr; }
     shared_ptr<Material> m_kd;
+protected:
+
     shared_ptr<Material> m_ks;
     Vector3 m_ka;
     float m_dp;

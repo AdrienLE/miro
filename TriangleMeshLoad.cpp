@@ -1,5 +1,8 @@
 #include "TriangleMesh.h"
 #include "Console.h"
+#include <algorithm>
+#include "Texture.h"
+#include "Phong.h"
 
 #ifdef WIN32
 // disable useless warnings
@@ -95,6 +98,98 @@ getIndices(char *word, int *vindex, int *tindex, int *nindex)
     *nindex = atoi (np);
 }
 
+void
+TriangleMesh::loadMtl(std::string file_name)
+{
+	file_name.erase(std::remove(file_name.begin(), file_name.end(), '\n'), file_name.end());
+	file_name.erase(std::remove(file_name.begin(), file_name.end(), '\r'), file_name.end());
+	FILE *fp = fopen(file_name.c_str(), "rb");
+    if (!fp)
+	{
+		printf("Cannot open \"%s\" for reading\n", file_name.c_str());
+		return;
+	}
+	debug("Loading MTL file '%s'\n", file_name.c_str());
+
+
+	int line_number = 0;
+	char *current_token;
+	char current_line[500];
+	std::string current_mtl_name;
+	char material_open = 0;
+	Phong *current_phong_mtl = NULL;
+	Texture *current_texture_mtl = NULL;
+
+	while(fgets(current_line, 500, fp))
+	{
+		current_token = strtok( current_line, " \t\n\r");
+		line_number++;
+		
+		if( current_token == NULL || strcmp(current_token, "//") == 0 || strcmp(current_token, "#") == 0) // comments
+			continue;
+		else if(!strcmp(current_token, "newmtl")) // new material
+		{
+			material_open = 1;
+			current_mtl_name = strtok(NULL, " \t");
+			current_mtl_name.erase(std::remove(current_mtl_name.begin(), current_mtl_name.end(), '\n'), current_mtl_name.end());
+			current_mtl_name.erase(std::remove(current_mtl_name.begin(), current_mtl_name.end(), '\r'), current_mtl_name.end());
+
+			current_texture_mtl = new Texture();
+			current_phong_mtl = new Phong(shared_ptr<Material>(current_texture_mtl));
+			m_mtls[current_mtl_name] = current_phong_mtl;
+		}
+		else if(!strcmp(current_token, "Ka") && material_open) // ambient
+		{
+			current_phong_mtl->setAmbient(Vector3(atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t"))));
+		}
+		else if(!strcmp(current_token, "Kd") && material_open) // diff
+		{
+			current_texture_mtl->setColor(Vector3(atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t"))));
+		}
+		else if(!strcmp(current_token, "Ks") && material_open) // specular
+		{
+			// NOT IMPLEMENTED
+		}
+		else if(!strcmp(current_token, "Ns") && material_open) // shiny
+		{
+			// NOT IMPLEMENTED
+		}
+		else if(!strcmp(current_token, "d") && material_open) // transparent
+		{
+			current_phong_mtl->setTransparency(1.0f - atof(strtok(NULL, " \t")));
+		}
+		else if(!strcmp(current_token, "r") && material_open) // reflection
+		{
+			current_phong_mtl->setReflection(atof(strtok(NULL, " \t")));
+		}
+		else if(!strcmp(current_token, "sharpness") && material_open) // glossy
+		{
+			// NOT IMPLEMENTED
+		}
+		else if(!strcmp(current_token, "Ni") && material_open) // refract index
+		{
+			current_phong_mtl->setReflectionIndex(atof(strtok(NULL, " \t")));
+		}
+		else if(!strcmp(current_token, "illum") && material_open) // illumination type
+		{
+			// NOT IMPLEMENTED
+		}
+		else if(!strcmp(current_token, "map_Kd") && material_open) // diffuse texture map
+		{
+			current_texture_mtl->setTexturePath(strtok(NULL, " \t"));
+		}
+		else if(!strcmp(current_token, "map_Ka") && material_open) // ambient texture map
+		{
+			current_texture_mtl->setTexturePath(strtok(NULL, " \t"));
+		}
+		else // unknown argument
+		{
+			fprintf(stderr, "Unknown mtl argument '%s' in material file %s at line %i:\n\t%s\n",
+					current_token, file_name, line_number, current_line);
+		}
+	}
+	fclose(fp);
+}
 
 void
 TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
@@ -119,17 +214,16 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
     }
     fseek(fp, 0, 0);
 
-
-    m_normals = new Vector3[std::max(nv,nf)];
+    m_normals = new Vector3[std::max(nv, std::max(nn, std::max(nf, nt)))];
     m_vertices = new Vector3[nv];
 
     if (nt)
     {   // got texture coordinates
-        m_texCoords = new VectorR2[nt];
-        m_texCoordIndices = new TupleI3[nf];
+        m_texCoords = new VectorR2[nt * 2];
+        m_texCoordIndices = new TupleI3[nf * 2];
     }
-    m_normalIndices = new TupleI3[nf]; // always make normals
-    m_vertexIndices = new TupleI3[nf]; // always have vertices
+    m_normalIndices = new TupleI3[nf * 2]; // always make normals
+    m_vertexIndices = new TupleI3[nf * 2]; // always have vertices
 
     m_numTris = 0;
     int nvertices = 0;
@@ -173,9 +267,10 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
         }
         else if (line[0] == 'f')
         {
-            char s1[32], s2[32], s3[32];
+            char s1[32], s2[32], s3[32], s4[32];
             int v, t, n;
-            sscanf(&line[1], "%s %s %s\n", s1, s2, s3);
+			s4[0] = 0;
+            sscanf(&line[1], "%s %s %s %s\n", s1, s2, s3, s4);
 
             getIndices(s1, &v, &t, &n);
             m_vertexIndices[m_numTris].x = v-1;
@@ -211,7 +306,69 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
             }
 
             m_numTris++;
-        } //  else ignore line
+
+			if (s4[0] != '\0')
+			{
+				m_vertexIndices[m_numTris].x = m_vertexIndices[m_numTris - 1].z;
+				m_normalIndices[m_numTris].x = m_normalIndices[m_numTris - 1].z;
+				m_texCoordIndices[m_numTris].x = m_texCoordIndices[m_numTris - 1].z;
+
+				m_vertexIndices[m_numTris].y = m_vertexIndices[m_numTris - 1].x;
+				m_normalIndices[m_numTris].y = m_normalIndices[m_numTris - 1].x;
+				m_texCoordIndices[m_numTris].y = m_texCoordIndices[m_numTris - 1].x;
+
+				getIndices(s4, &v, &t, &n);
+				m_vertexIndices[m_numTris].z = v-1;
+				if (n)
+					m_normalIndices[m_numTris].z = n-1;
+				if (t)
+					m_texCoordIndices[m_numTris].z = t-1;
+
+				if (!n)
+				{   // if no normal was supplied
+					Vector3 e1 = m_vertices[m_vertexIndices[m_numTris].y] -
+								 m_vertices[m_vertexIndices[m_numTris].x];
+					Vector3 e2 = m_vertices[m_vertexIndices[m_numTris].z] -
+								 m_vertices[m_vertexIndices[m_numTris].x];
+
+					m_normals[nn] = cross(e1, e2);
+					m_normalIndices[nn].x = nn;
+					m_normalIndices[nn].y = nn;
+					m_normalIndices[nn].z = nn;
+					nn++;
+				}
+				m_numTris++;
+			}
+        }
+		else if (strncmp(line, "mtllib", 6) == 0)
+		{
+			loadMtl(&(line[7]));
+		}
+		else if (strncmp(line, "usemtl", 6) == 0)
+		{
+			char texture_name[500];
+			sscanf(&line[6], "%s\n", texture_name);
+			m_mtl_ids[texture_name] = m_numTris;
+		}
+		//  else ignore line
     }
+}
+
+Material*
+TriangleMesh::getMaterialForId(int triangle_id)
+{
+	unsigned int max_id = 0;
+	Material *ret = NULL;
+	std::string name;
+	for(std::map<std::string, unsigned int>::iterator iter = m_mtl_ids.begin(); iter != m_mtl_ids.end(); ++iter)
+	{
+		if (iter->second <= triangle_id && iter->second >= max_id)
+		{
+			max_id = iter->second;
+			ret = m_mtls[iter->first];
+			name = iter->first;
+		}
+	}
+	return ret;
 }
 

@@ -13,6 +13,7 @@
 #include "CellularStoneTexture.h"
 #include "Box.h"
 #include "Sphere.h"
+#include "Texture.h"
 
 // local helper function declarations
 namespace
@@ -22,6 +23,63 @@ inline Matrix4x4 translate(float x, float y, float z);
 inline Matrix4x4 scale(float x, float y, float z);
 inline Matrix4x4 rotate(float angle, float x, float y, float z);
 } // namespace
+
+void 
+makeFinalScene()
+{
+	g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(512, 512);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
+    g_camera->setEye(Vector3(3, 3, 2));
+    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+    //g_scene->setSamples(1);
+    g_scene->setCutoffs(0);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(-10, 15, 10));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(400);
+    g_scene->addLight(light);
+
+    Phong* material = new Phong(1, 0.f, 0.2);
+	material->setIndirectLighting(false);
+
+	Matrix4x4 mscale;
+	mscale.setIdentity();
+    mscale *= scale(1, 1, 1);
+
+    TriangleMesh *object = new TriangleMesh;
+    object->load("well.obj");
+    addMeshTrianglesToScene(object, material);
+
+	TriangleMesh * floor = new TriangleMesh;
+    
+	floor->createSingleTriangle();
+    floor->setV1(Vector3(-10, -0.5, -10));
+    floor->setV2(Vector3(  0, -0.5,  10));
+    floor->setV3(Vector3( 10, -0.5, -10));
+    floor->setN1(Vector3(0, 1, 0));
+    floor->setN2(Vector3(0, 1, 0));
+    floor->setN3(Vector3(0, 1, 0));
+    
+    Triangle* t = new Triangle;
+    t->setIndex(0);
+    t->setMesh(floor);
+    t->setMaterial(material); 
+    g_scene->addObject(t);
+
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
 
 void
 makeSpecialScene()
@@ -479,7 +537,11 @@ addMeshTrianglesToScene(TriangleMesh * mesh, Material * material)
         Triangle* t = new Triangle;
         t->setIndex(i);
         t->setMesh(mesh);
-        t->setMaterial(material); 
+		Material *mat = mesh->getMaterialForId(i);
+		if (mat == NULL)
+			mat = material;
+		((Phong*)mat)->setIndirectLighting(false);
+        t->setMaterial(mat); 
         g_scene->addObject(t);
     }
 }

@@ -129,7 +129,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-	makeBunny20Scene();
+	makeFinalScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();

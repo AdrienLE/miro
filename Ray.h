@@ -39,12 +39,14 @@ public:
     Vector3 P;                          //!< The hit point
     Vector3 N;                          //!< Shading normal vector
     const Material* material;           //!< Material of the intersected object
+	float u;
+	float v;
 
     //! Default constructor.
     explicit HitInfo(float t = 0.0f,
                      const Vector3& P = Vector3(),
                      const Vector3& N = Vector3(0.0f, 1.0f, 0.0f)) :
-        t(t), P(P), N(N), material (0)
+        t(t), P(P), N(N), material (0), u(0), v(0)
     {
         // empty
     }

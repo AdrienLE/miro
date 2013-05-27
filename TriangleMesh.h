@@ -2,7 +2,9 @@
 #define CSE168_TRIANGLE_MESH_H_INCLUDED
 
 #include <stdlib.h>
+#include <map>
 #include "Matrix4x4.h"
+#include "Material.h"
 
 class TriangleMesh
 {
@@ -37,9 +39,14 @@ public:
     TupleI3* vIndices()     {return m_vertexIndices;}
     TupleI3* nIndices()     {return m_normalIndices;}
     int numTris()           {return m_numTris;}
+	Material* getMaterialForId(int triangle_id);
 
 protected:
     void loadObj(FILE* fp, const Matrix4x4& ctm);
+	void loadMtl(std::string file_name);
+
+	std::map<std::string, Material*> m_mtls;
+	std::map<std::string, unsigned int> m_mtl_ids;
 
     Vector3* m_normals;
     Vector3* m_vertices;
