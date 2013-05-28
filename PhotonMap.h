@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <stdint.h>
+#include <queue>
+#include <boost/function.hpp>
 #include "Vector3.h"
 #include "Miro.h"
 
@@ -10,7 +12,6 @@ struct Photon
 	Vector3 position;
 	Vector3 power;
 	Vector3 dir;
-	int flags;
 };
 
 class PhotonMap
@@ -44,8 +45,9 @@ private:
 		}
 	};
 
-	void tryInsertPhoton(Vector3 const &p, int k, Photon *photon, std::vector<Photon *> &result) const;
-	void recKNearest(PhotonNode *node, Vector3 const &v, int k, std::vector<Photon *> &result) const;
+	typedef std::priority_queue<Photon *, std::vector<Photon *>, boost::function<bool (Photon *, Photon *)> > Heap;
+	void tryInsertPhoton(Vector3 const &p, int k, Photon *photon, Heap &result) const;
+	void recKNearest(PhotonNode *node, Vector3 const &v, int k, Heap &result) const;
 	void recursiveBuild(PhotonNode *node, int axis, std::vector<Photon*>::iterator start, std::vector<Photon*>::iterator end);
 
 	std::vector<Photon *> m_photons;

@@ -27,19 +27,10 @@ void PhotonMap::recursiveBuild(PhotonNode *node, int axis, std::vector<Photon*>:
 	else
 		median = c;
 	std::swap(*median, *start);
-	std::vector<Photon*>::iterator middle = start + (n - 1);
-	for (std::vector<Photon*>::iterator it = start + 1; it != middle;)
+	std::vector<Photon*>::iterator middle = std::partition(start + 1, end, [&](Photon *phot)
 	{
-		if ((*it)->position[axis] <= (*start)->position[axis])
-		{
-			++it;
-		}
-		else
-		{
-			std::swap(*it, *middle);
-			--middle;
-		}
-	}
+		return phot->position[axis] < (*start)->position[axis];
+	});
 	PhotonNode *realptr = new PhotonNode[2];
 	uintptr_t ptr = (uintptr_t) realptr;
 	ptr |= axis;
@@ -49,46 +40,49 @@ void PhotonMap::recursiveBuild(PhotonNode *node, int axis, std::vector<Photon*>:
 	recursiveBuild(realptr + 1, (axis + 1) % 3, middle, end);
 }
 
-void PhotonMap::recKNearest(PhotonNode *node, Vector3 const &p, int k, std::vector<Photon *> &result) const
+void PhotonMap::recKNearest(PhotonNode *node, Vector3 const &p, int k, Heap &result) const
 {
 	if (!node->photon)
 		return;
-	if (!node->left)
+	if (node->left)
 	{
-		tryInsertPhoton(p, k, node->photon, result);
-		return;
+		int axis = ((uintptr_t)node->left) & 3;
+		float dist = p[axis] - node->photon->position[axis];
+		if (dist < 0)
+		{
+			recKNearest(SANITIZE(node->left), p, k, result);
+			if (result.size() < k || dist*dist < (result.top()->position - p).length2())
+				recKNearest(SANITIZE(node->left) + 1, p, k, result);
+		}
+		else
+		{
+			recKNearest(SANITIZE(node->left) + 1, p, k, result);
+			if (result.size() < k || dist*dist < (result.top()->position - p).length2())
+				recKNearest(SANITIZE(node->left), p, k, result);
+		}
 	}
-	int axis = ((uintptr_t)node->left) & 3;
-	PhotonNode *left = SANITIZE(node->left);
-	PhotonNode *right = left + 1;
-	if (p[axis] > node->photon->position[axis])
-		std::swap(left, right);
-	recKNearest(left, p, k, result);
 	tryInsertPhoton(p, k, node->photon, result);
-	if (result.size() < k || (result.back()->position - p).length2() >= (p[axis] - node->photon->position[axis])*(p[axis] - node->photon->position[axis]))
-		recKNearest(right, p, k, result);
 }
 
 void PhotonMap::kNearest(Vector3 const &p, int k, std::vector<Photon *> &result) const
 {
 	result.clear();
-	recKNearest(m_root, p, k, result);
+	Heap priority_queue([&](Photon* a, Photon *b)
+	{
+		return (a->position - p).length2() < (a->position - p).length2();
+	},
+	result);
+	recKNearest(m_root, p, k, priority_queue);
 }
 
-void PhotonMap::tryInsertPhoton(Vector3 const &p, int k, Photon *photon, std::vector<Photon *> &result) const
+void PhotonMap::tryInsertPhoton(Vector3 const &p, int k, Photon *photon, Heap &result) const
 {
 	if (result.size() < k)
-		result.push_back(photon);
-	else if ((result.back()->position - p).length2() > (photon->position - p).length2())
-		result.back() = photon;
-	else
-		return;
-	for (int i = result.size() - 1; i > 0; --i)
+		result.push(photon);
+	else if ((result.top()->position - p).length2() > (photon->position - p).length2())
 	{
-		if ((result[i]->position - p).length2() < (result[i - 1]->position - p).length2())
-			std::swap(result[i], result[i - 1]);
-		else
-			break;
+		result.pop();
+		result.push(photon);
 	}
 }
 
@@ -106,7 +100,7 @@ void PhotonMap::build()
 // {
 // 	PhotonMap map;
 // 	std::vector<Photon> photons;
-// 	for (int i = 0; i < 30000000; ++i)
+// 	for (int i = 0; i < 10000000; ++i)
 // 	{
 // 		Photon p;
 // 		p.position = Vector3(rand() * randone(g_rng), rand() * randone(g_rng), rand() * randone(g_rng));
@@ -121,7 +115,7 @@ void PhotonMap::build()
 // 	std::vector<Photon *> res;
 // 	{
 // 	    boost::timer::auto_cpu_timer t;
-// 		map.kNearest(pos, 10, res);
+// 		map.kNearest(pos, 10000000, res);
 // 	}
 // 	std::sort(photons.begin(), photons.end(), [&](Photon const &a, Photon const &b) {
 // 		return (a.position - pos).length2() < (b.position - pos).length2();
