@@ -12,7 +12,7 @@ class Image;
 class Scene
 {
 public:
-    Scene() : m_bgColor(0), m_samples(1), m_cutoffs(0), m_depth_sample(0) {}
+    Scene() : m_bgColor(0), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
 
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}
     const Objects* objects() const      {return &m_objects;}
@@ -36,18 +36,15 @@ public:
     inline void setCutoffs(int n) { m_cutoffs = n; }
     inline int cutoffs() const { return m_cutoffs; }
 
-	void setDepthOfField(const Vector3& focus, unsigned int depth_sample = 16);
+	void setDepthOfField(float focus_length, float lens = 1.0f);
 
     void raytraceImage(Camera *cam, Image *img);
-	void raytraceDefault(Camera *cam, Image *img);
-	void raytraceDepth(Camera *cam, Image *img);
 
     bool trace(HitInfo& minHit, const Ray& ray,
                float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 
 protected:
     std::vector<Vector3 *> traceLine(Camera const *cam, Image const *img, int j) const;
-
 
     Vector3 m_bgColor;
 
@@ -58,8 +55,8 @@ protected:
     int m_samples;
     int m_cutoffs;
 
-	unsigned int m_depth_sample;
-	Vector3 m_focus;
+	float m_focus_length;
+	float m_lens;
 };
 
 extern Scene * g_scene;

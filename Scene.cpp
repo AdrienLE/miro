@@ -52,47 +52,60 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
     std::vector<Vector3> colors(m_samples);
     for (int i = 0; i < img->width(); ++i)
     {
-        for (int k = 0; k < m_samples; ++k)
-        {
-            ray = cam->eyeRay(i + (m_samples == 1 ? 0.5f : randone(g_rng) - 0.5f), j + (m_samples == 1 ? 0.5f : randone(g_rng) - 0.5f), img->width(), img->height());
-            refr_stack.clear();
-            refr_stack.push_back(1.f);
-            ray.refractionStack = &refr_stack;
-            ray.refractionIndex = 0;
-            if (!results[i])
-                results[i] = new Vector3();
-            if (trace(hitInfo, ray))
-            {
-                colors[k] = hitInfo.material->shade(ray, hitInfo, *this);
-            }
-            else
-            {
-                colors[k] = bgColor();
-            }
-            *results[i] += colors[k];
-        }
-        if (m_cutoffs > 0)
-        {
-            std::vector<int> biggest(m_cutoffs, -1);
-            for (int c = 0; c < m_cutoffs; ++c)
-            {
-                if (biggest[0] == -1 || colors[c].length2() > colors[biggest[0]].length2())
-                {
-                    biggest[0] = c;
-                    for (int k = 1; k < m_cutoffs; ++k)
-                    {
-                        if (biggest[k] == -1 || colors[biggest[k - 1]].length2() > colors[biggest[k]].length2())
-                            std::swap(biggest[k - 1], biggest[k]);
-                        else
-                            break;
-                    }
-                }
-            }
-            for (int k = 0; k < m_cutoffs; ++k)
-                *results[i] -= colors[biggest[k]];
-        }
-        if (results[i])
-            *results[i] /= m_samples - m_cutoffs;
+		for (int k = 0; k < m_samples; ++k)
+		{
+			ray = cam->eyeRay(i + (m_samples == 1 ? 0.5f : randone(g_rng) - 0.5f), j + (m_samples == 1 ? 0.5f : randone(g_rng) - 0.5f), img->width(), img->height());
+			if (m_focus_length >= 0.f) // if depth of field enabled
+			{
+				Vector3 focal_point = ray.o + m_focus_length * ray.d;
+				Vector3 view_dir = cam->viewDir();
+				Vector3 d_vec(randone(g_rng) - 0.5f, randone(g_rng) - 0.5f, randone(g_rng) - 0.5f);
+				d_vec.normalize();
+				d_vec = view_dir.cross(d_vec);
+					
+				ray.o += d_vec * randone(g_rng) * m_lens;
+				ray.d = focal_point - ray.o;
+				ray.d.normalize();
+			}
+
+			refr_stack.clear();
+			refr_stack.push_back(1.f);
+			ray.refractionStack = &refr_stack;
+			ray.refractionIndex = 0;
+			if (!results[i])
+				results[i] = new Vector3();
+			if (trace(hitInfo, ray))
+			{
+				colors[k] = hitInfo.material->shade(ray, hitInfo, *this);
+			}
+			else
+			{
+				colors[k] = bgColor();
+			}
+			*results[i] += colors[k];
+		}
+		if (m_cutoffs > 0)
+		{
+			std::vector<int> biggest(m_cutoffs, -1);
+			for (int c = 0; c < m_cutoffs; ++c)
+			{
+				if (biggest[0] == -1 || colors[c].length2() > colors[biggest[0]].length2())
+				{
+					biggest[0] = c;
+					for (int k = 1; k < m_cutoffs; ++k)
+					{
+						if (biggest[k] == -1 || colors[biggest[k - 1]].length2() > colors[biggest[k]].length2())
+							std::swap(biggest[k - 1], biggest[k]);
+						else
+							break;
+					}
+				}
+			}
+			for (int k = 0; k < m_cutoffs; ++k)
+				*results[i] -= colors[biggest[k]];
+		}
+		if (results[i])
+			*results[i] /= m_samples - m_cutoffs;
     }
     return results;
 }
@@ -100,10 +113,39 @@ std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int
 void
 Scene::raytraceImage(Camera *cam, Image *img)
 {
-	if (m_depth_sample == 0) // depth of field disabled
-		raytraceDefault(cam, img);
-	else
-		raytraceDepth(cam, img);
+    boost::timer::auto_cpu_timer t;
+    boost::threadpool::pool threadpool(nCpus() * 2);
+    std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
+    std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
+
+    // loop over all pixels in the image
+    {
+        for (int j = 0; j < img->height(); ++j)
+        {
+            tasks.push_back(new boost::packaged_task<std::vector<Vector3 *> >(boost::bind(&Scene::traceLine, this, cam, img, j)));
+            lines.push_back(new boost::unique_future<std::vector<Vector3 *> >(tasks.back()->get_future()));
+            boost::threadpool::schedule(threadpool, boost::bind(&boost::packaged_task<std::vector<Vector3 *> >::operator(), tasks.back()));
+        }
+		printf("Rendering Progress: %.3f%%\r", 0.f);
+        for (int j = 0; j < img->height(); ++j)
+        {
+            for (int i = 0; i < img->width(); ++i)
+            {
+                if (lines[j]->get()[i])
+                {
+                    img->setPixel(i, j, *lines[j]->get()[i]);
+                    delete lines[j]->get()[i];
+                }
+            }
+			img->drawScanline(j);
+			if (j + 1 == img->height() || !lines[j + 1]->has_value())
+				glFinish();
+			printf("Rendering Progress: %.3f%%\r", j/float(img->height())*100.0f);
+			fflush(stdout);
+		}
+    }
+    printf("Rendering Progress: 100.000%\n");
+    debug("done Raytracing!\n");
 }
 
 bool
@@ -113,84 +155,8 @@ Scene::trace(HitInfo& minHit, const Ray& ray, float tMin, float tMax) const
 }
 
 void
-Scene::setDepthOfField(const Vector3& focus, unsigned int samples)
+Scene::setDepthOfField(float focus_length, float lens)
 {
-	m_focus = focus;
-	m_depth_sample = samples;
-}
-
-void 
-Scene::raytraceDefault(Camera *cam, Image *img)
-{
-    boost::timer::auto_cpu_timer t;
-    boost::threadpool::pool threadpool(nCpus() * 2);
-    std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
-    std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
-
-    // loop over all pixels in the image
-    {
-        for (int j = 0; j < img->height(); ++j)
-        {
-            tasks.push_back(new boost::packaged_task<std::vector<Vector3 *> >(boost::bind(&Scene::traceLine, this, cam, img, j)));
-            lines.push_back(new boost::unique_future<std::vector<Vector3 *> >(tasks.back()->get_future()));
-            boost::threadpool::schedule(threadpool, boost::bind(&boost::packaged_task<std::vector<Vector3 *> >::operator(), tasks.back()));
-        }
-		printf("Rendering Progress: %.3f%%\r", 0.f);
-        for (int j = 0; j < img->height(); ++j)
-        {
-            for (int i = 0; i < img->width(); ++i)
-            {
-                if (lines[j]->get()[i])
-                {
-                    img->setPixel(i, j, *lines[j]->get()[i]);
-                    delete lines[j]->get()[i];
-                }
-            }
-			img->drawScanline(j);
-			if (j + 1 == img->height() || !lines[j + 1]->has_value())
-				glFinish();
-			printf("Rendering Progress: %.3f%%\r", j/float(img->height())*100.0f);
-			fflush(stdout);
-		}
-    }
-    printf("Rendering Progress: 100.000%\n");
-    debug("done Raytracing!\n");
-}
-
-void
-Scene::raytraceDepth(Camera *cam, Image *img)
-{
-    boost::timer::auto_cpu_timer t;
-    boost::threadpool::pool threadpool(nCpus() * 2);
-    std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
-    std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
-
-    // loop over all pixels in the image
-    {
-        for (int j = 0; j < img->height(); ++j)
-        {
-            tasks.push_back(new boost::packaged_task<std::vector<Vector3 *> >(boost::bind(&Scene::traceLine, this, cam, img, j)));
-            lines.push_back(new boost::unique_future<std::vector<Vector3 *> >(tasks.back()->get_future()));
-            boost::threadpool::schedule(threadpool, boost::bind(&boost::packaged_task<std::vector<Vector3 *> >::operator(), tasks.back()));
-        }
-		printf("Rendering Progress: %.3f%%\r", 0.f);
-        for (int j = 0; j < img->height(); ++j)
-        {
-            for (int i = 0; i < img->width(); ++i)
-            {
-                if (lines[j]->get()[i])
-                {
-                    img->setPixel(i, j, *lines[j]->get()[i]);
-                    delete lines[j]->get()[i];
-                }
-            }
-			img->drawScanline(j);
-			if (j + 1 == img->height() || !lines[j + 1]->has_value())
-				glFinish();
-			printf("Rendering Progress: %.3f%%\r", j/float(img->height())*100.0f);
-			fflush(stdout);
-		}
-    }
-    printf("Rendering Progress: 100.000%\n");
-    debug("done Raytracing!\n");
+	m_focus_length = focus_length;
+	m_lens = lens;
 }

@@ -5,3 +5,4 @@ void makeBunny1Scene();
 void makeBunny20Scene();
 void makeSponzaScene();
 void makeFinalScene();
+void makeDepthScene();
