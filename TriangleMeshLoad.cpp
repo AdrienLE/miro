@@ -118,7 +118,6 @@ TriangleMesh::loadMtl(std::string file_name)
 	std::string current_mtl_name;
 	char material_open = 0;
 	Phong *current_phong_mtl = NULL;
-	Texture *current_texture_mtl = NULL;
 
 	while(fgets(current_line, 500, fp))
 	{
@@ -134,60 +133,96 @@ TriangleMesh::loadMtl(std::string file_name)
 			current_mtl_name.erase(std::remove(current_mtl_name.begin(), current_mtl_name.end(), '\n'), current_mtl_name.end());
 			current_mtl_name.erase(std::remove(current_mtl_name.begin(), current_mtl_name.end(), '\r'), current_mtl_name.end());
 
-			current_texture_mtl = new Texture();
-			current_phong_mtl = new Phong(shared_ptr<Material>(current_texture_mtl));
+			current_phong_mtl = new Phong(0.8f, 1.0f, 0.2f);
+			current_phong_mtl->setIndirectLighting(false);
+
 			m_mtls[current_mtl_name] = current_phong_mtl;
 		}
-		else if(!strcmp(current_token, "Ka") && material_open) // ambient
+		else if(!strcmp(current_token, "Ka") && material_open) // Ka r g b => The Ka statement specifies the ambient reflectivity using RGB values (range: [0, 1])
 		{
-			current_phong_mtl->setAmbient(Vector3(atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t"))));
+			current_phong_mtl->setKa(Vector3(atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t"))));
 		}
-		else if(!strcmp(current_token, "Kd") && material_open) // diff
+		else if(!strcmp(current_token, "Kd") && material_open) // Kd r g b => The Kd statement specifies the diffuse reflectivity using RGB values (range: [0, 1])
 		{
-			current_texture_mtl->setColor(Vector3(atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t"))));
+			current_phong_mtl->setKd(Vector3(atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t")), atof(strtok(NULL, " \t"))));
 		}
-		else if(!strcmp(current_token, "Ks") && material_open) // specular
+		else if(!strcmp(current_token, "Ks") && material_open) // Ks r g b => The Ks statement specifies the specular reflectivity using RGB values (range: [0, 1])
 		{
-			// NOT IMPLEMENTED
+			current_phong_mtl->setKs(Vector3(1.0f - atof(strtok(NULL, " \t")), 1.0f - atof(strtok(NULL, " \t")), 1.0f - atof(strtok(NULL, " \t"))));
 		}
-		else if(!strcmp(current_token, "Ns") && material_open) // shiny
+		else if(!strcmp(current_token, "Ns") && material_open) // Ns exponent => Specifies the specular exponent for the current material.  This defines the focus of the specular highlight (range: [0, 1000])
 		{
-			// NOT IMPLEMENTED
+			current_phong_mtl->setPhong(atof(strtok(NULL, " \t")));
 		}
-		else if(!strcmp(current_token, "d") && material_open) // transparent
+		else if(!strcmp(current_token, "d") && material_open) // d factor => Specifies the dissolve for the current material. A  factor of 1.0 is fully opaque (range: [0, 1])
 		{
 			current_phong_mtl->setTransparency(1.0f - atof(strtok(NULL, " \t")));
 		}
-		else if(!strcmp(current_token, "r") && material_open) // reflection
+		else if(!strcmp(current_token, "r") && material_open) // r factor => Specifies the reflection for the current material. A  factor of 1.0 reflects all the light (range: [0, 1])
 		{
-			current_phong_mtl->setReflection(atof(strtok(NULL, " \t")));
+			current_phong_mtl->setKs(atof(strtok(NULL, " \t")));
 		}
-		else if(!strcmp(current_token, "sharpness") && material_open) // glossy
+		else if(!strcmp(current_token, "sharpness") && material_open) // sharpness value => Specifies the sharpness of the reflections from the local reflection map (range: [0, 1000])  The default is 60.
 		{
 			// NOT IMPLEMENTED
 		}
-		else if(!strcmp(current_token, "Ni") && material_open) // refract index
+		else if(!strcmp(current_token, "Ni") && material_open) // Ni optical_density => Specifies the optical density for the surface.  This is also known as index of refraction (range: [0.001 to 10])
 		{
 			current_phong_mtl->setReflectionIndex(atof(strtok(NULL, " \t")));
 		}
-		else if(!strcmp(current_token, "illum") && material_open) // illumination type
+		else if(!strcmp(current_token, "illum") && material_open) // Illumination model => We use the default model. It will probably never be implemented in this raytracer
 		{
 			// NOT IMPLEMENTED
 		}
-		else if(!strcmp(current_token, "map_Kd") && material_open) // diffuse texture map
+		else if(!strcmp(current_token, "map_Kd") && material_open) // map_Kd filename => Specifies that a color texture file is linked to the diffuse reflectivity of the material. The map_Kd value is multiplied by the Kd value.
 		{
-			current_texture_mtl->setTexturePath(strtok(NULL, " \t"));
+			Texture* kd_texture = new Texture();
+			kd_texture->setTexturePath(strtok(NULL, " \t"));
+			current_phong_mtl->setKdTexture(shared_ptr<Material>(kd_texture));
 		}
-		else if(!strcmp(current_token, "map_Ka") && material_open) // ambient texture map
+		else if((!strcmp(current_token, "map_Ka") || !strcmp(current_token, "map_kA")) && material_open) // map_Ka filename => Specifies that a color texture file is applied to the ambient reflectivity of the material. The map_Ka value is multiplied by the Ka value.
 		{
-			current_texture_mtl->setTexturePath(strtok(NULL, " \t"));
+			Texture* ka_texture = new Texture();
+			ka_texture->setTexturePath(strtok(NULL, " \t"));
+			current_phong_mtl->setKaTexture(shared_ptr<Material>(ka_texture));
+		}
+		else if ((!strcmp(current_token, "map_Ks") || !strcmp(current_token, "map_kS")) && material_open) // map_Ks filename => Specifies that a color texture file is linked to the specular reflectivity of the material. The map_Ks value is multiplied by the Ks value
+		{
+			Texture* ks_texture = new Texture();
+			ks_texture->setTexturePath(strtok(NULL, " \t"));
+			current_phong_mtl->setKsTexture(shared_ptr<Material>(ks_texture));
+		}
+		else if ((!strcmp(current_token, "bump") || !strcmp(current_token, "map_bump")) && material_open) // bump filename => Specifies that a bump texture file is linked to the material
+		{
+			Texture* bump_texture = new Texture();
+
+			current_token = strtok(NULL, " \t");
+			if (!strcmp(current_token, "-bm"))
+			{
+				current_phong_mtl->setBm(atof(strtok(NULL, " \t")));
+				bump_texture->setTexturePath(strtok(NULL, " \t"));
+			}
+			else
+				bump_texture->setTexturePath(current_token);
+			current_phong_mtl->setBumpTexture(shared_ptr<Texture>(bump_texture));
+		}
+		else if (!strcmp(current_token, "map_d") && material_open) // map_d filename => Specifies that a scalar texture file is linked to the dissolve of the material. The map_d value is multiplied by the d value
+		{
+			// NOT IMPLEMENTED		
+		}
+		else if (!strcmp(current_token, "refl") && material_open) // reflection map statement
+		{
+			// NOT IMPLEMENTED
+		}
+		else if (!strcmp(current_token, "map_Ns") && material_open) // map_Ns filename => Specifies that a scalar texture file is linked to the specular exponent of the material. The map_Ns value is multiplied by the Ns value
+		{
+			// NOT IMPLEMENTED
 		}
 		else // unknown argument
 		{
 			fprintf(stderr, "Unknown mtl argument '%s' in material file %s at line %i:\n\t%s\n",
 					current_token, file_name.c_str(), line_number, current_line);
 		}
-    current_phong_mtl->setAmbient(0.4);
 	}
 	fclose(fp);
 }
@@ -215,15 +250,15 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
     }
     fseek(fp, 0, 0);
 
-    m_normals = new Vector3[std::max(nv, std::max(nn, std::max(nf, nt)))];
-    m_vertices = new Vector3[nv];
+    m_normals = new Vector3[std::max(nv, std::max(nn, std::max(nf, nt))) * 2];
+    m_vertices = new Vector3[nv * 2];
 
     if (nt)
     {   // got texture coordinates
         m_texCoords = new VectorR2[nt * 2];
         m_texCoordIndices = new TupleI3[nf * 2];
     }
-    m_normalIndices = new TupleI3[nf * 2]; // always make normals
+    m_normalIndices = new TupleI3[std::max(nv, std::max(nn, std::max(nf, nt))) * 2]; // always make normals
     m_vertexIndices = new TupleI3[nf * 2]; // always have vertices
 
     m_numTris = 0;
@@ -331,7 +366,6 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 								 m_vertices[m_vertexIndices[m_numTris].x];
 					Vector3 e2 = m_vertices[m_vertexIndices[m_numTris].z] -
 								 m_vertices[m_vertexIndices[m_numTris].x];
-
 					m_normals[nn] = cross(e1, e2);
 					m_normalIndices[nn].x = nn;
 					m_normalIndices[nn].y = nn;
@@ -349,7 +383,7 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 		{
 			char texture_name[500];
 			sscanf(&line[6], "%s\n", texture_name);
-			m_mtl_ids[texture_name] = m_numTris;
+			m_mtl_ids[texture_name].push_back(m_numTris);
 		}
 		//  else ignore line
     }
@@ -361,13 +395,16 @@ TriangleMesh::getMaterialForId(int triangle_id)
 	unsigned int max_id = 0;
 	Material *ret = NULL;
 	std::string name;
-	for(std::map<std::string, unsigned int>::iterator iter = m_mtl_ids.begin(); iter != m_mtl_ids.end(); ++iter)
+	for(std::map<std::string, std::vector<unsigned int> >::iterator iter = m_mtl_ids.begin(); iter != m_mtl_ids.end(); ++iter)
 	{
-		if (iter->second <= triangle_id && iter->second >= max_id)
+		for (int i = 0; i < iter->second.size(); i++)
 		{
-			max_id = iter->second;
-			ret = m_mtls[iter->first];
-			name = iter->first;
+			if (iter->second[i] <= triangle_id && iter->second[i] >= max_id)
+			{
+				max_id = iter->second[i];
+				ret = m_mtls[iter->first];
+				name = iter->first;
+			}
 		}
 	}
 	return ret;

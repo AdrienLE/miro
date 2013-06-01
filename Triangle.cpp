@@ -146,7 +146,7 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             FourVectors const &ab = tri.ab;
             FourVectors const &ac = tri.ac;
             FourVectors o_a = o4 - tri.a;
-            FourVectors const &normal = ab.cross(ac);
+            FourVectors normal = ab.cross(ac);
             __m128 detA = _mm_div_ps(_mm_set_ps1(1.f), d4.dot(normal));
             __m128 t = _mm_mul_ps(o_a.dot(normal), detA);
             __m128 alpha = _mm_mul_ps(d4.dot(o_a.cross(ac)), detA);
@@ -166,8 +166,9 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             Vector3 nb = ns[ni[tr->m_index].y];
             Vector3 nc = ns[ni[tr->m_index].z];
             float alphaf = _mm_extract_ps1(alpha, min), betaf = _mm_extract_ps1(beta, min);
-            result.N = (1 - alphaf - betaf) * na + alphaf * nb + betaf * nc;
-            result.N.normalize();
+            result.N = (1.0f - alphaf - betaf) * na + alphaf * nb + betaf * nc;
+            //result.N = Vector3(_mm_extract_ps1(normal.x, min), _mm_extract_ps1(normal.y, min), _mm_extract_ps1(normal.z, min));
+			result.N.normalize();
             TriangleMesh::VectorR2 *uvs = tr->m_mesh->uvs();
             TriangleMesh::TupleI3 *uvi = tr->m_mesh->uvIndices();
             TriangleMesh::VectorR2 uva = uvs[uvi[tr->m_index].x];

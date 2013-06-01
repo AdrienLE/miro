@@ -2,16 +2,52 @@
 #include "Ray.h"
 #include "Scene.h"
 
-Phong::Phong(const Vector3 & color, const Vector3 &ks, const Vector3 &ka): m_kd(new Material(color)), m_ks(new Material(ks)), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_phongp(0), m_indirect(true)
+Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 {
+	m_ka = ka;
+	m_ks = ks; // old: m_sp
+	m_kd = kd; // old: m_dp
+	m_bm = 1.0f;
+	m_tp = 0;
+	m_phong = 100;
+	m_refr = 1;
+	m_indirect = true;
+	m_texture_ka = shared_ptr<Material>(new Material());
+	m_texture_ks = shared_ptr<Material>(new Material());
+	m_texture_kd = shared_ptr<Material>(new Material());
+	m_texture_bump = NULL;
 }
 
-Phong::Phong(shared_ptr<Material> kd, shared_ptr<Material> ks, const Vector3 &ka) : m_kd(kd), m_ks(ks), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_indirect(true)
+Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, const Vector3 &ka)
 {
+	m_ka = ka;
+	m_ks = Vector3(0.f);
+	m_kd = Vector3(1.f);
+	m_bm = 1.0f;
+	m_tp = 0;
+	m_phong = 100;
+	m_refr = 1;
+	m_indirect = true;
+	m_texture_kd = texture_kd;
+	m_texture_ks = texture_ks;
+	m_texture_ka = shared_ptr<Material>(new Material());
+	m_texture_bump = NULL;
 }
 
-Phong::Phong(shared_ptr<Material> kd, const Vector3 &ka) : m_kd(kd), m_ks(new Material(Vector3(1))), m_ka(ka), m_dp(1), m_sp(0), m_tp(0), m_phong(100), m_refr(1), m_indirect(true)
+Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
 {
+	m_ka = ka;
+	m_ks = Vector3(0.f);
+	m_kd = Vector3(1.f);
+	m_bm = 1.0f;
+	m_tp = 0;
+	m_phong = 100;
+	m_refr = 1;
+	m_indirect = true;
+	m_texture_kd = texture_kd;
+	m_texture_ks = shared_ptr<Material>(new Material());
+	m_texture_ka = shared_ptr<Material>(new Material());
+	m_texture_bump = NULL;
 }
 
 Phong::~Phong()
@@ -19,24 +55,41 @@ Phong::~Phong()
 }
 
 Vector3
-Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
+Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 {
     Vector3 L = Vector3(0.0f, 0.0f, 0.0f);
-        
+ 	Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
     const Lights *lightlist = scene.lights();
     
+	HitInfo bm_hit = rhit;
+	bm_hit.N.normalize();
+	// Bump mapping
+	if (m_texture_bump != NULL)
+	{
+		Vector3 v_bump = m_bm * m_texture_bump->shade(ray, rhit, scene);
+		Vector3 grads = m_bm * m_texture_bump->computeGradient(ray, rhit, scene);
+
+		Vector3 const &py = bm_hit.N;
+		Vector3 pu = py.cross(randvect);
+		Vector3 pv = py.cross(pu);
+
+		//bm_hit.N = bm_hit.N + (grads[1] * (bm_hit.N.cross(pv)) - grads[0] * (bm_hit.N.cross(pu))) / bm_hit.N.length();
+		bm_hit.N = pu.cross(pv);
+		bm_hit.N.normalize();
+	}
+
+
     // loop over all of the lights
     Lights::const_iterator lightIter;
-    Vector3 diffcolor = m_kd->shade(ray, hit, scene);
-    Vector3 speccolor = m_ks->shade(ray, hit, scene);
-	Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
+	Vector3 diffcolor = m_kd * m_texture_kd->shade(ray, bm_hit, scene);
+    Vector3 speccolor = m_ks * m_texture_ks->shade(ray, bm_hit, scene);
 	for (lightIter = lightlist->begin(); lightIter != lightlist->end(); lightIter++)
     {
         PointLight* pLight = *lightIter;
 
         float shadow_mul = 0.f;
 
-        Vector3 tolight = pLight->position() - hit.P;
+        Vector3 tolight = pLight->position() - bm_hit.P;
         tolight.normalize();
         Vector3 xaxis = randvect.cross(tolight);
         xaxis.normalize();
@@ -50,11 +103,11 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         } while (xdisk*xdisk + ydisk*ydisk > 1);
         Vector3 posinlight = pLight->position() + xdisk*pLight->sphere()*xaxis + ydisk*pLight->sphere()*yaxis;
         Ray lightray;
-        lightray.d = (posinlight - hit.P);
+        lightray.d = (posinlight - bm_hit.P);
         float raylength = lightray.d.length();
         float remaininglength = raylength;
         lightray.d /= raylength;
-        lightray.o = hit.P;
+        lightray.o = bm_hit.P;
         while (true)
         {
             HitInfo lighthit;
@@ -81,16 +134,16 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 
         // normalize the light direction
 
-        float nDotL = dot(hit.N, lightray.d);
+        float nDotL = dot(bm_hit.N, lightray.d);
 
-        if (m_dp > EPSILON)
+        if (m_kd.max() > EPSILON)
         {
-            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result * diffcolor * m_dp;
+            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result * diffcolor;
         }
-        if (m_phongp > EPSILON && nDotL > 0)
+        if (m_ks.max() > EPSILON && nDotL > 0)
         {
-            Vector3 refl = -lightray.d + 2*nDotL*hit.N;
-            L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor * m_phongp;
+            Vector3 refl = -lightray.d + 2*nDotL*bm_hit.N;
+            L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor;
             //Vector3 half = -ray.d + hit.N;
             //half.normalize();
             //L += std::max(0.f, powf(half.dot(hit.N), 1000)) * result * speccolor * m_sp;
@@ -98,12 +151,11 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     }
 
 	// Indirect diffuse sampling (method 2)
-	if (m_indirect && m_dp > EPSILON && ray.iter < MAX_RAY_ITER)
+	if (m_indirect && m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER)
 	{
 		float theta = asinf((randone(g_rng)));
 		float phi = 2 * PI * randone(g_rng);
-
-		Vector3 const &yaxis = hit.N;
+		Vector3 const &yaxis = bm_hit.N;
 		Vector3 xaxis = yaxis.cross(randvect);
 		xaxis.normalize();
 		Vector3 zaxis = yaxis.cross(xaxis);
@@ -112,7 +164,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
         diffuse_ray.refractionIndex = ray.refractionIndex;
         diffuse_ray.refractionStack = ray.refractionStack;
 		diffuse_ray.iter = ray.iter + 1;
-		diffuse_ray.o = hit.P;
+		diffuse_ray.o = bm_hit.P;
 		diffuse_ray.d = 0;
 		diffuse_ray.d += sinf(theta) * cosf(phi) * xaxis;
 		diffuse_ray.d += sinf(theta) * sinf(phi) * zaxis;
@@ -125,25 +177,25 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 			diff_res = diff_hit.material->shade(diffuse_ray, diff_hit, scene);
 		else
 			diff_res = scene.bgColor();
-		L += (m_dp / PI) * (diffcolor * diff_res);
+		L += (diffcolor * diff_res) / PI;
 	}
 
-    if (m_sp > EPSILON && ray.iter < MAX_RAY_ITER)
+    if (m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
     {
         Ray newray;
-        newray.o = hit.P;
-        newray.d = ray.d - 2*ray.d.dot(hit.N)*hit.N;
+        newray.o = bm_hit.P;
+        newray.d = ray.d - 2*ray.d.dot(bm_hit.N)*bm_hit.N;
         newray.iter = ray.iter + 1;
         newray.refractionIndex = ray.refractionIndex;
         newray.refractionStack = ray.refractionStack;
         HitInfo minHit;
         if (scene.trace(minHit, newray, EPSILON))
         {
-            L += minHit.material->shade(newray, minHit, scene) * m_sp;
+			L += minHit.material->shade(newray, minHit, scene) * speccolor;
         }
         else
         {
-            L += scene.bgColor() * m_sp;
+            L += scene.bgColor() * speccolor;
         }
     }
 
@@ -164,12 +216,12 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
             newray.refractionStack->push_back(m_refr);
             ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
         }
-        newray.o = hit.P;
+        newray.o = bm_hit.P;
         Vector3 w = -ray.d;
-        float dDotN = w.dot(hit.N);
+        float dDotN = w.dot(bm_hit.N);
         if (dDotN < 0)
             dDotN = -dDotN;
-        newray.d = -ratio * (w - dDotN*hit.N) - sqrtf(1 - ratio*ratio*(1 - dDotN*dDotN)) * hit.N;
+        newray.d = -ratio * (w - dDotN*bm_hit.N) - sqrtf(1 - ratio*ratio*(1 - dDotN*dDotN)) * bm_hit.N;
         newray.d.normalize();
         newray.iter = ray.iter + 1;
         HitInfo minHit;
@@ -184,7 +236,7 @@ Phong::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
     }
 
     // We are assuming the diffuse color and ambient color are the same here.
-    L += diffcolor * m_ka;
+	L += m_ka * m_texture_ka->shade(ray, bm_hit, scene);
 
     return L;
 }

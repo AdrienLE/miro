@@ -54,7 +54,7 @@ protected:
 	void loadMtl(std::string file_name);
 
 	std::map<std::string, Material*> m_mtls;
-	std::map<std::string, unsigned int> m_mtl_ids;
+	std::map<std::string, std::vector<unsigned int> > m_mtl_ids;
 
     Vector3* m_normals;
     Vector3* m_vertices;

@@ -45,7 +45,7 @@ makeFinalScene()
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(10, 15, -10));
+    light->setPosition(Vector3(4.0, 3.0, 5.9));
     light->setColor(Vector3(1, 1, 1));
     light->setWattage(400);
     g_scene->addLight(light);
@@ -53,22 +53,22 @@ makeFinalScene()
     Phong* material = new Phong(1, 0.f, 0.4);
 	material->setIndirectLighting(false);
 
-    g_scene->setSamples(10);
+    g_scene->setSamples(1);
 
 	Matrix4x4 mscale;
 	mscale.setIdentity();
     mscale *= scale(1, 1, 1);
 
     TriangleMesh *object = new TriangleMesh;
-    object->load("well.obj");
+    object->load("Ocean.obj");
     addMeshTrianglesToScene(object, material);
 
 	TriangleMesh * floor = new TriangleMesh;
     
 	floor->createSingleTriangle();
-    floor->setV1(Vector3(-10, -0.5, -10));
-    floor->setV2(Vector3(  0, -0.5,  10));
-    floor->setV3(Vector3( 10, -0.5, -10));
+    floor->setV1(Vector3(-100, -10, -100));
+    floor->setV2(Vector3(  0, -10,  100));
+    floor->setV3(Vector3( 100, -10, -100));
     floor->setN1(Vector3(0, 1, 0));
     floor->setN2(Vector3(0, 1, 0));
     floor->setN3(Vector3(0, 1, 0));
@@ -77,7 +77,7 @@ makeFinalScene()
     t->setIndex(0);
     t->setMesh(floor);
     t->setMaterial(material); 
-    g_scene->addObject(t);
+    //g_scene->addObject(t);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
@@ -290,9 +290,9 @@ makeBunny20Scene()
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(10, 20, 10));
+    light->setPosition(Vector3(4, 6, 1));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(1000);
+    light->setWattage(300);
     g_scene->addLight(light);
 
     TriangleMesh * mesh;

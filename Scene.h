@@ -12,7 +12,7 @@ class Image;
 class Scene
 {
 public:
-    Scene() : m_bgColor(0), m_samples(1), m_cutoffs(0) {}
+    Scene() : m_bgColor(0), m_samples(1), m_cutoffs(0), m_depth_sample(0) {}
 
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}
     const Objects* objects() const      {return &m_objects;}
@@ -36,8 +36,12 @@ public:
     inline void setCutoffs(int n) { m_cutoffs = n; }
     inline int cutoffs() const { return m_cutoffs; }
 
+	void setDepthOfField(const Vector3& focus, unsigned int depth_sample = 16);
 
     void raytraceImage(Camera *cam, Image *img);
+	void raytraceDefault(Camera *cam, Image *img);
+	void raytraceDepth(Camera *cam, Image *img);
+
     bool trace(HitInfo& minHit, const Ray& ray,
                float tMin = 0.0f, float tMax = MIRO_TMAX) const;
 
@@ -53,6 +57,9 @@ protected:
 
     int m_samples;
     int m_cutoffs;
+
+	unsigned int m_depth_sample;
+	Vector3 m_focus;
 };
 
 extern Scene * g_scene;

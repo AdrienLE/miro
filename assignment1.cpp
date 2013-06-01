@@ -40,7 +40,7 @@ a1_makeBunnyScene()
     Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
     Phong* mat2 = new Phong(1, 0, 0.2);
     //mat = mat2;
-    mat->setPhong(10, 0.5);
+    mat->setPhong(10);
     TriangleMesh * bunny = new TriangleMesh;
     bunny->load("bunny_smooth.obj");
     
@@ -100,13 +100,13 @@ a1_makeTeapotScene()
     g_scene->setAntiAliasing(25, 25);
 
     Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.2f)), 0.2);
-    mat->setDiffuseProportion(0.8);
-    mat->setSpecularProportion(0);
-    mat->setPhong(100, 0.6);
+    mat->setKd(0.8);
+    mat->setKs(0);
+    mat->setPhong(100);
     Phong* mat2 = new Phong(shared_ptr<Material>(new CellularStoneTexture(1.f)), Vector3(0));
-    mat2->setDiffuseProportion(0.8);
-    mat2->setSpecularProportion(0.2);
-    mat2->setPhong(100, 0.6);
+    mat2->setKd(0.8);
+    mat2->setKs(0.2);
+    mat2->setPhong(100);
 
     TriangleMesh * teapot = new TriangleMesh;
     teapot->load("teapot.obj");
@@ -138,9 +138,9 @@ a1_makeTeapotScene()
     g_scene->addObject(t);
 
     Phong *transp = new Phong(1, 1, 0.0);
-    transp->setDiffuseProportion(0.2);
+    transp->setKd(0.2);
     transp->setRefraction(1.3, 0.8);
-    transp->setPhong(30, 0.5);
+    transp->setPhong(30);
     transp->setCastShadow(false);
     Sphere * sphere = new Sphere();
     sphere->setCenter(Vector3(-1.0, 1.4, 0));
