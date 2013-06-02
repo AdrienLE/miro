@@ -28,6 +28,8 @@ public:
 	const Vector3& getKs() { return m_ks; }
 	void setKd(const Vector3& kd) { m_kd = kd; }
 	void setBm(float bm) { m_bm = bm; }
+	void setGlossy(bool is_glossy) { m_is_glossy = true; }
+	bool isGlossy() { return m_is_glossy; }
 
 	void setKaTexture(shared_ptr<Material> ka_texture) { m_texture_ka = ka_texture; }
 	void setKsTexture(shared_ptr<Material> ks_texture) { m_texture_ks = ks_texture; }
@@ -48,7 +50,9 @@ protected:
     float m_tp;
     float m_phong;
     float m_refr;
+
     bool m_indirect;
+	bool m_is_glossy;
 };
 
 #endif // CSE168_LAMBERT_H_INCLUDED

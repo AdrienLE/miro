@@ -16,6 +16,7 @@ Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 	m_texture_ks = shared_ptr<Material>(new Material());
 	m_texture_kd = shared_ptr<Material>(new Material());
 	m_texture_bump = NULL;
+	m_is_glossy = false;
 }
 
 Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, const Vector3 &ka)
@@ -32,6 +33,7 @@ Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, c
 	m_texture_ks = texture_ks;
 	m_texture_ka = shared_ptr<Material>(new Material());
 	m_texture_bump = NULL;
+	m_is_glossy = false;
 }
 
 Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
@@ -48,6 +50,7 @@ Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
 	m_texture_ks = shared_ptr<Material>(new Material());
 	m_texture_ka = shared_ptr<Material>(new Material());
 	m_texture_bump = NULL;
+	m_is_glossy = false;
 }
 
 Phong::~Phong()
@@ -183,11 +186,32 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
     if (m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
     {
         Ray newray;
-        newray.o = bm_hit.P;
-        newray.d = ray.d - 2*ray.d.dot(bm_hit.N)*bm_hit.N;
-        newray.iter = ray.iter + 1;
-        newray.refractionIndex = ray.refractionIndex;
-        newray.refractionStack = ray.refractionStack;
+		newray.iter = ray.iter + 1;
+		newray.refractionIndex = ray.refractionIndex;
+		newray.refractionStack = ray.refractionStack;
+		newray.o = bm_hit.P;
+
+		if (m_is_glossy)
+		{
+			Vector3 R = ray.d - 2 * ray.d.dot(bm_hit.N) * bm_hit.N;
+
+			Vector3 u = R.cross(randvect);
+			u.normalize();
+			Vector3 v = R.cross(u);
+			v.normalize();
+
+			float theta = acos(powf(1.0f - randone(g_rng), (1.0f / (m_phong + 1))));
+			float phi = 2.0f * PI * randone(g_rng);
+					
+			newray.d = 0;
+			newray.d += sinf(theta) * cosf(phi) * u;
+			newray.d += sinf(theta) * sinf(phi) * v;
+			newray.d += cosf(theta) * R;
+		}
+		else
+			newray.d = ray.d - 2 * ray.d.dot(bm_hit.N) * bm_hit.N;
+
+		newray.d.normalize();
         HitInfo minHit;
         if (scene.trace(minHit, newray, EPSILON))
         {

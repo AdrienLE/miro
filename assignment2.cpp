@@ -25,6 +25,87 @@ inline Matrix4x4 rotate(float angle, float x, float y, float z);
 } // namespace
 
 void
+makeGlossyScene()
+{
+    g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(780, 360);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.0f));
+    g_camera->setEye(Vector3(0, 2, 6));
+    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+	g_scene->setSamples(256);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(10, 10, 10));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(600);
+    g_scene->addLight(light);
+
+	Phong *material = new Phong(0.0, 0, 0.2);
+	material->setIndirectLighting(false);
+	material->setKs(1.0f);
+	material->setPhong(10000);
+	material->setGlossy(true);
+	Sphere* sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(-2.5, 1, 1));
+	sphere->setMaterial(material);
+	g_scene->addObject(sphere);
+
+	material = new Phong(0.0, 0, 0.2);
+	material->setIndirectLighting(false);
+	material->setKs(1.0f);
+	material->setPhong(500);
+	material->setGlossy(true);
+	sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(0, 1, 1));
+	sphere->setMaterial(material);
+	g_scene->addObject(sphere);
+
+    material = new Phong(0.0, 0, 0.2);
+	material->setIndirectLighting(false);
+	material->setKs(1.0f);
+	material->setPhong(100);
+	material->setGlossy(true);
+	sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(2.5, 1, 1));
+	sphere->setMaterial(material);
+	g_scene->addObject(sphere);
+    
+    // create the floor triangle
+    TriangleMesh * floor = new TriangleMesh;
+    floor->createSingleTriangle();
+    floor->setV1(Vector3(-10, 0, -10));
+    floor->setV2(Vector3(  0, 0,  10));
+    floor->setV3(Vector3( 10, 0, -10));
+    floor->setN1(Vector3(0, 1, 0));
+    floor->setN2(Vector3(0, 1, 0));
+    floor->setN3(Vector3(0, 1, 0));
+    
+    Triangle* t = new Triangle;
+    t->setIndex(0);
+    t->setMesh(floor);
+	material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
+	material->setKs(0.2);
+	material->setIndirectLighting(false);
+    t->setMaterial(material); 
+    g_scene->addObject(t);
+
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
+
+void
 makeDepthScene()
 {
     g_camera = new Camera;
@@ -40,7 +121,7 @@ makeDepthScene()
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-	g_scene->setSamples(100);
+	g_scene->setSamples(10);
 	g_scene->setDepthOfField(8.f, 0.3f);
 
     // create and place a point light source
@@ -137,7 +218,7 @@ makeFinalScene()
     mscale *= scale(1, 1, 1);
 
     TriangleMesh *object = new TriangleMesh;
-    object->load("Ocean.obj");
+    object->load("cave.obj");
     addMeshTrianglesToScene(object, material);
 
 	TriangleMesh * floor = new TriangleMesh;

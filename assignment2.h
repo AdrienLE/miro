@@ -6,3 +6,5 @@ void makeBunny20Scene();
 void makeSponzaScene();
 void makeFinalScene();
 void makeDepthScene();
+void makeGlossyScene();
+
