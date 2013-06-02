@@ -141,7 +141,8 @@ makeDepthScene()
 	g_scene->addObject(sphere);
 
 	material = new Phong(Vector3(0.2, 0.2, 0.7), 0, 0.2);
-	material->setRefraction(1.4, 0.6);
+	material->setRefraction(1.4);
+    material->setTransparency(0.6);
 	material->setIndirectLighting(false);
 	material->setKs(0.3);
 	sphere = new Sphere();
@@ -257,27 +258,21 @@ makeSpecialScene()
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-    g_scene->setSamples(1000);
+    g_scene->setSamples(100);
     g_scene->setCutoffs(0);
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(2.7, 5.6, -2.7));
+    light->setPosition(Vector3(2.7, 2.5, 5.7));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(50);
-    light->setBlur(0.1, 0);
+    light->setWattage(500);
+    light->setBlur(0, 0);
     g_scene->addLight(light);
 
-    Material* material = new Phong(0.9, 0, 0);
+    Phong* material = new Phong(0.9, 0, 0);
     TriangleMesh * teapot = new TriangleMesh;
     teapot->load("cornell_box.obj");
     addMeshTrianglesToScene(teapot, material);
-
-    Sphere *sphere = new Sphere();
-    sphere->setCenter(light->position());
-    sphere->setRadius(light->sphere());
-    sphere->setMaterial(new Phong(Vector3(1, 0, 0), 0, 0));
-   // g_scene->addObject(sphere);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
@@ -324,7 +319,7 @@ makeBoxScene()
     t->setMaterial(material); 
     g_scene->addObject(t);
 
-	Box *b = new Box(Vector3(0), Vector3(2));
+	Box *b = new Box(Vector3(0.f), Vector3(2));
 	b->setMaterial(material);
 	g_scene->addObject(b);
 	
@@ -398,15 +393,24 @@ makeBunny1Scene()
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(10, 20, 10));
+    light->setPosition(Vector3(3, 7, 0));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(1000);
+    light->setWattage(100);
     g_scene->addLight(light);
 
     Material* material = new Phong(1, 0, 0.2);
-    TriangleMesh * bunny = new TriangleMesh;
-    bunny->load("bunny.obj");
-    addMeshTrianglesToScene(bunny, material);
+    // TriangleMesh * bunny = new TriangleMesh;
+    // bunny->load("bunny.obj");
+    // addMeshTrianglesToScene(bunny, material);
+
+    Sphere *sphere = new Sphere();
+    sphere->setCenter(Vector3(0, 3, 0));
+    sphere->setRadius(2);
+    Phong *sphmat = new Phong(0, Vector3(1, 1, 1), 0);
+    sphmat->setRefraction(1.3);
+    sphmat->setTransparency(1);
+    sphere->setMaterial(sphmat);
+    g_scene->addObject(sphere);
     
     // create the floor triangle
     TriangleMesh * floor = new TriangleMesh;

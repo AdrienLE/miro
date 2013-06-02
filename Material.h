@@ -3,6 +3,8 @@
 
 #include "Miro.h"
 #include "Vector3.h"
+#include "PhotonMap.h"
+#include <exception>
 
 class Material
 {
@@ -14,6 +16,8 @@ public:
     
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
+
+    virtual void shadePhoton(const Ray &ray, const HitInfo &hit, const Scene &scene, Vector3 const &power, Photon_map *map) const {throw std::runtime_error("Not implemented");}
 
     virtual bool castShadow() const {return m_castShadow;}
     virtual void setCastShadow(bool b) {m_castShadow = b;}

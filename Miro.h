@@ -36,12 +36,15 @@ class Camera;
 class Image;
 class Scene;
 class Material;
+class Photon_map;
 
 extern void ParseFile(FILE* fp);
 extern void initOpenGL();
 extern Camera* g_camera;
 extern Scene* g_scene;
 extern Image* g_image;
+extern Photon_map* g_global_illum_map;
+extern Photon_map* g_caustics_map;
 
 extern boost::mt19937 g_rng;
 //extern boost::uniform_01<float> randone;

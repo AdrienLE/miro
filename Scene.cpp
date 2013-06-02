@@ -9,6 +9,8 @@
 
 Scene * g_scene = 0;
 
+Scene::Scene()  : m_bgColor(0.f), m_global_photons(200000), m_caustics_photons(2000000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
+
 void
 Scene::openGL(Camera *cam)
 {
@@ -17,10 +19,42 @@ Scene::openGL(Camera *cam)
     cam->drawGL();
 
     // draw objects
-    for (size_t i = 0; i < m_objects.size(); ++i)
-        m_objects[i]->renderGL();
+    // for (size_t i = 0; i < m_objects.size(); ++i)
+    //     m_objects[i]->renderGL();
+    g_caustics_map->renderGL();
 
     glutSwapBuffers();
+}
+
+void Scene::sampleMap(Photon_map *map, int n_photons, float total_wattage)
+{
+    Lights::iterator lit;
+    std::vector<float> refr_stack;
+    for (lit = m_lights.begin(); lit != m_lights.end(); ++lit)
+    {
+        int photons = (*lit)->wattage() * n_photons / total_wattage;
+        float power = (*lit)->wattage() / photons;
+        for (int i = 0; i < photons; ++i)
+        {
+            Ray ray;
+            do
+            {
+                ray.d.x = 2*randone(g_rng) - 1;
+                ray.d.y = 2*randone(g_rng) - 1;
+                ray.d.z = 2*randone(g_rng) - 1;
+            } while (ray.d.x*ray.d.x + ray.d.y*ray.d.y + ray.d.z*ray.d.z > 1);
+            ray.d.normalize();
+            ray.o = (*lit)->position();
+            refr_stack.clear();
+            refr_stack.push_back(1.f);
+            ray.refractionStack = &refr_stack;
+            ray.refractionIndex = 0;
+            HitInfo h;
+            if (trace(h, ray))
+                h.material->shadePhoton(ray, h, *this, power * (*lit)->color(), map);
+        }
+    }
+    map->balance();
 }
 
 void
@@ -33,13 +67,25 @@ Scene::preCalc()
         pObject->preCalc();
     }
     Lights::iterator lit;
+    float total_wattage = 0.f;
     for (lit = m_lights.begin(); lit != m_lights.end(); lit++)
     {
         PointLight* pLight = *lit;
         pLight->preCalc();
+        total_wattage += pLight->wattage();
     }
 
     m_bvh.build(&m_objects);
+
+    delete g_global_illum_map;
+    g_global_illum_map = new Photon_map(m_global_photons);
+    delete g_caustics_map;
+    g_caustics_map = new Photon_map(m_caustics_photons);
+    g_caustics_map->setCaustics(true);
+    printf("photons: %d\n", m_caustics_photons);
+
+    sampleMap(g_caustics_map, m_caustics_photons, total_wattage);
+    sampleMap(g_global_illum_map, m_global_photons, total_wattage);
 }
 
 std::vector<Vector3 *> Scene::traceLine(Camera const *cam, Image const *img, int j) const

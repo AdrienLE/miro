@@ -170,13 +170,16 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             //result.N = Vector3(_mm_extract_ps1(normal.x, min), _mm_extract_ps1(normal.y, min), _mm_extract_ps1(normal.z, min));
 			result.N.normalize();
             TriangleMesh::VectorR2 *uvs = tr->m_mesh->uvs();
-            TriangleMesh::TupleI3 *uvi = tr->m_mesh->uvIndices();
-            TriangleMesh::VectorR2 uva = uvs[uvi[tr->m_index].x];
-            TriangleMesh::VectorR2 uvb = uvs[uvi[tr->m_index].y];
-            TriangleMesh::VectorR2 uvc = uvs[uvi[tr->m_index].z];
-            TriangleMesh::VectorR2 uv = uva * (1 - alphaf - betaf) + uvb * alphaf + uvc * betaf;
-            result.u = uv.x;
-            result.v = uv.y;
+            if (uvs)
+            {
+                TriangleMesh::TupleI3 *uvi = tr->m_mesh->uvIndices();
+                TriangleMesh::VectorR2 uva = uvs[uvi[tr->m_index].x];
+                TriangleMesh::VectorR2 uvb = uvs[uvi[tr->m_index].y];
+                TriangleMesh::VectorR2 uvc = uvs[uvi[tr->m_index].z];
+                TriangleMesh::VectorR2 uv = uva * (1 - alphaf - betaf) + uvb * alphaf + uvc * betaf;
+                result.u = uv.x;
+                result.v = uv.y;
+            }
             result.material = tr->m_material;
             tMax = result.t;
             hit = true;
@@ -207,13 +210,16 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             Vector3 nc = ns[ni[tri->m_index].z];
             result.N = (1 - alpha - beta) * na + alpha * nb + beta * nc;
             TriangleMesh::VectorR2 *uvs = tri->m_mesh->uvs();
-            TriangleMesh::TupleI3 *uvi = tri->m_mesh->uvIndices();
-            TriangleMesh::VectorR2 uva = uvs[uvi[tri->m_index].x];
-            TriangleMesh::VectorR2 uvb = uvs[uvi[tri->m_index].y];
-            TriangleMesh::VectorR2 uvc = uvs[uvi[tri->m_index].z];
-            TriangleMesh::VectorR2 uv = uva * (1 - alpha - beta) + uvb * alpha + uvc * beta;
-            result.u = uv.x;
-            result.v = uv.y;
+            if (uvs)
+            {
+                TriangleMesh::TupleI3 *uvi = tri->m_mesh->uvIndices();
+                TriangleMesh::VectorR2 uva = uvs[uvi[tri->m_index].x];
+                TriangleMesh::VectorR2 uvb = uvs[uvi[tri->m_index].y];
+                TriangleMesh::VectorR2 uvc = uvs[uvi[tri->m_index].z];
+                TriangleMesh::VectorR2 uv = uva * (1 - alpha - beta) + uvb * alpha + uvc * beta;
+                result.u = uv.x;
+                result.v = uv.y;
+            }
             // result.N = normal;
             result.N.normalize();
             result.material = tri->m_material;

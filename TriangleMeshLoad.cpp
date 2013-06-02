@@ -168,7 +168,7 @@ TriangleMesh::loadMtl(std::string file_name)
 		}
 		else if(!strcmp(current_token, "Ni") && material_open) // Ni optical_density => Specifies the optical density for the surface.  This is also known as index of refraction (range: [0.001 to 10])
 		{
-			current_phong_mtl->setReflectionIndex(atof(strtok(NULL, " \t")));
+			current_phong_mtl->setRefraction(atof(strtok(NULL, " \t")));
 		}
 		else if(!strcmp(current_token, "illum") && material_open) // Illumination model => We use the default model. It will probably never be implemented in this raytracer
 		{

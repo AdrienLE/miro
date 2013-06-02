@@ -12,7 +12,7 @@ class Image;
 class Scene
 {
 public:
-    Scene() : m_bgColor(0), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
+    Scene();
 
     void addObject(Object* pObj)        {m_objects.push_back(pObj);}
     const Objects* objects() const      {return &m_objects;}
@@ -45,12 +45,15 @@ public:
 
 protected:
     std::vector<Vector3 *> traceLine(Camera const *cam, Image const *img, int j) const;
+    void sampleMap(Photon_map *map, int n_photons, float total_wattage);
 
     Vector3 m_bgColor;
 
     Objects m_objects;
     BVH m_bvh;
     Lights m_lights;
+    int m_global_photons;
+    int m_caustics_photons;
 
     int m_samples;
     int m_cutoffs;

@@ -15,7 +15,6 @@ Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 	m_texture_ka = shared_ptr<Material>(new Material());
 	m_texture_ks = shared_ptr<Material>(new Material());
 	m_texture_kd = shared_ptr<Material>(new Material());
-	m_texture_bump = NULL;
 	m_is_glossy = false;
 }
 
@@ -32,7 +31,6 @@ Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, c
 	m_texture_kd = texture_kd;
 	m_texture_ks = texture_ks;
 	m_texture_ka = shared_ptr<Material>(new Material());
-	m_texture_bump = NULL;
 	m_is_glossy = false;
 }
 
@@ -49,12 +47,100 @@ Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
 	m_texture_kd = texture_kd;
 	m_texture_ks = shared_ptr<Material>(new Material());
 	m_texture_ka = shared_ptr<Material>(new Material());
-	m_texture_bump = NULL;
 	m_is_glossy = false;
 }
 
 Phong::~Phong()
 {
+}
+
+void Phong::shadePhoton(const Ray &ray, const HitInfo &hit, const Scene &scene, Vector3 const &power, Photon_map *map) const
+{
+    Vector3 dcolor = m_kd * m_texture_kd->shade(ray, hit, scene);
+    if (dcolor.max() > EPSILON && (!map->isCaustics() || ray.seen_specular))
+    {
+        Vector3 const &position = hit.P;
+        Vector3 powe = power * dcolor;
+        Vector3 const &dir = ray.d;
+        map->store(powe.array(), position.array(), dir.array());
+    }
+    if (ray.iter > MAX_RAY_ITER) return; // TODO: remove this?
+    Vector3 scolor = m_ks * m_texture_ks->shade(ray, hit, scene);
+    Vector3 total_color = dcolor + scolor;
+    float pr = total_color.max();
+    float pd = pr * dcolor.sum() / total_color.sum();
+    float ps = pr - pd;
+    float pspec_refr = m_tp * ps;
+    float pspec_refl = ps - pspec_refr;
+
+    Vector3 *color = 0;
+    float probability = -1;
+    Ray r;
+    r.refractionIndex = ray.refractionIndex;
+    r.refractionStack = ray.refractionStack;
+    r.iter = ray.iter + 1;
+    r.o = hit.P;
+    r.seen_specular = ray.seen_specular;
+    Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
+    float russian_roulette = randone(g_rng);
+    if (russian_roulette < pd)
+    {
+        if (map->isCaustics()) return;
+        color = &dcolor;
+        probability = pd;
+        float theta = asinf((randone(g_rng)));
+        float phi = 2 * PI * randone(g_rng);
+
+        Vector3 const &yaxis = hit.N;
+        Vector3 xaxis = yaxis.cross(randvect);
+        xaxis.normalize();
+        Vector3 zaxis = yaxis.cross(xaxis);
+        zaxis.normalize();
+        r.d = 0;
+        r.d += sinf(theta) * cosf(phi) * xaxis;
+        r.d += sinf(theta) * sinf(phi) * zaxis;
+        r.d += cosf(theta) * yaxis;
+        r.d.normalize();
+    }
+    else if (russian_roulette < pd + pspec_refl)
+    {
+        probability = pspec_refl;
+        color = &scolor;
+        r.d = ray.d - 2*ray.d.dot(hit.N)*hit.N;
+        r.seen_specular = true;
+    }
+    else if (russian_roulette < pr)
+    {
+        probability = pspec_refr;
+        color = &scolor;
+        float ratio = 1.0;
+        if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
+        {
+            r.refractionIndex = ray.refractionIndex - 1;
+            ratio = m_refr / (*r.refractionStack)[r.refractionIndex];
+        }
+        else if ((*ray.refractionStack)[ray.refractionIndex] != m_refr)
+        {
+            r.refractionIndex = ray.refractionIndex + 1;
+            r.refractionStack->push_back(m_refr);
+            ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
+        }
+        Vector3 w = -ray.d;
+        float dDotN = w.dot(hit.N);
+        if (dDotN < 0)
+            dDotN = -dDotN;
+        r.d = -ratio * (w - dDotN*hit.N) - sqrtf(1 - ratio*ratio*(1 - dDotN*dDotN)) * hit.N;
+        r.d.normalize();
+        r.seen_specular = true;
+    }
+    else
+        return;
+
+    HitInfo h;
+    if (scene.trace(h, r))
+    {
+        h.material->shadePhoton(r, h, scene, power * *color / probability, map);
+    }
 }
 
 Vector3
@@ -86,6 +172,9 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
     Lights::const_iterator lightIter;
 	Vector3 diffcolor = m_kd * m_texture_kd->shade(ray, bm_hit, scene);
     Vector3 speccolor = m_ks * m_texture_ks->shade(ray, bm_hit, scene);
+    // float irrad[3];
+    // g_global_illum_map->irradiance_estimate(irrad, bm_hit.P.array(), bm_hit.N.array(), 1.f, 100);
+    // L += Vector3(irrad) * diffcolor;
 	for (lightIter = lightlist->begin(); lightIter != lightlist->end(); lightIter++)
     {
         PointLight* pLight = *lightIter;
@@ -141,7 +230,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 
         if (m_kd.max() > EPSILON)
         {
-            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / PI) * result * diffcolor;
+            L += std::max(0.0f, nDotL/falloff * pLight->wattage() / (4*PI)) * result * diffcolor;
         }
         if (m_ks.max() > EPSILON && nDotL > 0)
         {
@@ -153,9 +242,17 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
         }
     }
 
+    float caustic[3] = {0, 0, 0};
+    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 5.0f, 50); // TODO: customize these parameters
+    Vector3 caustic_color(caustic);
+    L += caustic_color;
+
 	// Indirect diffuse sampling (method 2)
-	if (m_indirect && m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER)
+    // printf("m_indirect: %d, max: %f\n", (int)m_indirect, m_kd.max());
+// TODO: fix m_indirect
+	if (/*m_indirect && */m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER)
 	{
+        // printf("here\n");
 		float theta = asinf((randone(g_rng)));
 		float phi = 2 * PI * randone(g_rng);
 		Vector3 const &yaxis = bm_hit.N;
@@ -177,13 +274,20 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 		HitInfo diff_hit;
 		Vector3 diff_res;
 		if (scene.trace(diff_hit, diffuse_ray, EPSILON))
-			diff_res = diff_hit.material->shade(diffuse_ray, diff_hit, scene);
+        {
+            float irrad[3];
+            g_global_illum_map->irradiance_estimate(irrad, diff_hit.P.array(), diff_hit.N.array(), 100.f, 50); // TODO: customize these parameters
+            diff_res = Vector3(irrad);
+        }
+			// diff_res = diff_hit.material->shade(diffuse_ray, diff_hit, scene);
 		else
-			diff_res = scene.bgColor();
-		L += (diffcolor * diff_res) / PI;
+            diff_res = scene.bgColor();
+        L += (diffcolor * diff_res) / PI;
+
+//diff_res = scene.bgColor();
 	}
 
-    if (m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
+    if ((1 - m_tp) * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
     {
         Ray newray;
 		newray.iter = ray.iter + 1;
@@ -223,7 +327,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
         }
     }
 
-    if (m_tp > EPSILON && ray.iter < MAX_RAY_ITER)
+    if (m_tp * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
     {
         Ray newray;
         newray.refractionStack = ray.refractionStack;
@@ -251,11 +355,11 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
         HitInfo minHit;
         if (scene.trace(minHit, newray, EPSILON))
         {
-            L += minHit.material->shade(newray, minHit, scene) * m_tp;
+            L += minHit.material->shade(newray, minHit, scene) * m_tp * speccolor;
         }
         else
         {
-            L += scene.bgColor() * m_tp;
+            L += scene.bgColor() * m_tp * speccolor;
         }
     }
 

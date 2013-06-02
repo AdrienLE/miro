@@ -97,13 +97,13 @@ a1_makeTeapotScene()
     light->setBlur(0.6, 10);
     light->setWattage(500);
     g_scene->addLight(light);
-    g_scene->setAntiAliasing(25, 25);
+    g_scene->setAntiAliasing(1, 1);
 
     Phong* mat = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.2f)), 0.2);
     mat->setKd(0.8);
     mat->setKs(0);
     mat->setPhong(100);
-    Phong* mat2 = new Phong(shared_ptr<Material>(new CellularStoneTexture(1.f)), Vector3(0));
+    Phong* mat2 = new Phong(shared_ptr<Material>(new CellularStoneTexture(1.f)), Vector3(0.f));
     mat2->setKd(0.8);
     mat2->setKs(0.2);
     mat2->setPhong(100);
@@ -139,7 +139,8 @@ a1_makeTeapotScene()
 
     Phong *transp = new Phong(1, 1, 0.0);
     transp->setKd(0.2);
-    transp->setRefraction(1.3, 0.8);
+    transp->setRefraction(1.3);
+    transp->setTransparency(0.8);
     transp->setPhong(30);
     transp->setCastShadow(false);
     Sphere * sphere = new Sphere();

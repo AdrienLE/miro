@@ -29,6 +29,8 @@ public:
     Vector3(float xVal, float yVal, float zVal) :
         x(xVal), y(yVal), z(zVal) {}
 
+    explicit Vector3(float v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
+
     //! Assignment operator.
     /*!
         Assigns the values from \a a to this Vec3.
@@ -230,8 +232,11 @@ public:
 
     Vector3 min(Vector3 const &b) const {return Vector3(std::min(x, b.x), std::min(y, b.y), std::min(z, b.z));}
     Vector3 max(Vector3 const &b) const {return Vector3(std::max(x, b.x), std::max(y, b.y), std::max(z, b.z));}
+    float max() const {return std::max(x, std::max(y, z));}
+    float min() const {return std::min(x, std::min(y, z));}
+    float sum() const {return x + y + z;}
 
-	float max() const { return std::max(x, std::max(y, z));}
+    const float *array() const {return &x;}
 
     Vector3 abs() const {return Vector3(std::abs(x), std::abs(y), std::abs(z));}
     bool operator>(Vector3 const &v) const {return x > v.x && y > v.y && z > v.z;}

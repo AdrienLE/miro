@@ -14,8 +14,9 @@ public:
     int iter;
     std::vector<float> *refractionStack;
     int refractionIndex;
+    bool seen_specular; // Only for photon map generation
 
-    Ray() : o(), d(Vector3(0.0f,0.0f,1.0f)), iter(0)
+    Ray() : o(), d(Vector3(0.0f,0.0f,1.0f)), iter(0), seen_specular(false)
     {
         // empty
     }

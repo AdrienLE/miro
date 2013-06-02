@@ -129,7 +129,7 @@ int
 main(int argc, char*argv[])
 {
     // create a scene
-	makeFinalScene();
+	makeGlossyScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();
