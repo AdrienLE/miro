@@ -36,13 +36,16 @@ public:
         VectorR2() {}
         VectorR2(float x, float y) : x(x), y(y) {}
 
-        VectorR2 operator+(VectorR2 const &v) {return VectorR2(x + v.x, y + v.y);}
-        VectorR2 operator*(float f) {return VectorR2(x * f, y * f);}
+        VectorR2 operator+(VectorR2 const &v) const {return VectorR2(x + v.x, y + v.y);}
+        VectorR2 operator-(VectorR2 const &v) const {return VectorR2(x - v.x, y - v.y);}
+        VectorR2 operator*(float f) const {return VectorR2(x * f, y * f);}
     };
 
     Vector3* vertices()     {return m_vertices;}
     Vector3* normals()      {return m_normals;}
     VectorR2* uvs()         {return m_texCoords;}
+    Vector3* tangents()     {return m_tangents;}
+    TupleI3* tIndices()     {return m_vertexIndices;}
     TupleI3* vIndices()     {return m_vertexIndices;}
     TupleI3* nIndices()     {return m_normalIndices;}
     TupleI3* uvIndices()    {return m_texCoordIndices;}
@@ -59,6 +62,7 @@ protected:
     Vector3* m_normals;
     Vector3* m_vertices;
     VectorR2* m_texCoords;
+    Vector3* m_tangents;
 
     TupleI3* m_normalIndices;
     TupleI3* m_vertexIndices;

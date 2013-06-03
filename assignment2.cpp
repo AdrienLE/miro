@@ -35,52 +35,52 @@ makeGlossyScene()
     
     // set up the camera
     g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.0f));
-    g_camera->setEye(Vector3(0, 2, 6));
+    g_camera->setEye(Vector3(0, 2, 2));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-	g_scene->setSamples(256);
+	g_scene->setSamples(100);
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(10, 10, 10));
+    light->setPosition(Vector3(0, 3, 3));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(600);
+    light->setWattage(60);
     g_scene->addLight(light);
 
 	Phong *material = new Phong(0.0, 0, 0.2);
-	material->setIndirectLighting(false);
-	material->setKs(1.0f);
-	material->setPhong(10000);
-	material->setGlossy(true);
+	//material->setIndirectLighting(false);
+	//material->setKs(1.0f);
+	//material->setPhong(10000);
+	//material->setGlossy(true);
 	Sphere* sphere = new Sphere();
-	sphere->setRadius(1);
-	sphere->setCenter(Vector3(-2.5, 1, 1));
-	sphere->setMaterial(material);
-	g_scene->addObject(sphere);
+	//sphere->setRadius(1);
+	//sphere->setCenter(Vector3(-2.5, 1, 1));
+	//sphere->setMaterial(material);
+	//g_scene->addObject(sphere);
 
-	material = new Phong(0.0, 0, 0.2);
-	material->setIndirectLighting(false);
-	material->setKs(1.0f);
-	material->setPhong(500);
-	material->setGlossy(true);
-	sphere = new Sphere();
-	sphere->setRadius(1);
-	sphere->setCenter(Vector3(0, 1, 1));
-	sphere->setMaterial(material);
-	g_scene->addObject(sphere);
-
-    material = new Phong(0.0, 0, 0.2);
+	material = new Phong(0.0, 0, 0.0);
 	material->setIndirectLighting(false);
 	material->setKs(1.0f);
 	material->setPhong(100);
 	material->setGlossy(true);
 	sphere = new Sphere();
-	sphere->setRadius(1);
-	sphere->setCenter(Vector3(2.5, 1, 1));
+	sphere->setRadius(10);
+	sphere->setCenter(Vector3(0, 0, 0));
 	sphere->setMaterial(material);
 	g_scene->addObject(sphere);
+
+ //   material = new Phong(0.0, 0, 0.2);
+	//material->setIndirectLighting(false);
+	//material->setKs(1.0f);
+	//material->setPhong(100);
+	//material->setGlossy(true);
+	//sphere = new Sphere();
+	//sphere->setRadius(1);
+	//sphere->setCenter(Vector3(2.5, 1, 1));
+	//sphere->setMaterial(material);
+	//g_scene->addObject(sphere);
     
     // create the floor triangle
     TriangleMesh * floor = new TriangleMesh;
@@ -96,7 +96,7 @@ makeGlossyScene()
     t->setIndex(0);
     t->setMesh(floor);
 	material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
-	material->setKs(0.2);
+	material->setKs(0);
 	material->setIndirectLighting(false);
     t->setMaterial(material); 
     g_scene->addObject(t);
@@ -390,43 +390,45 @@ makeBunny1Scene()
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
+    g_scene->setSamples(100);
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(3, 7, 0));
+    light->setPosition(Vector3(3, 5, 2));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(100);
+    light->setWattage(800);
     g_scene->addLight(light);
 
-    Material* material = new Phong(1, 0, 0.2);
-    // TriangleMesh * bunny = new TriangleMesh;
-    // bunny->load("bunny.obj");
-    // addMeshTrianglesToScene(bunny, material);
 
-    Sphere *sphere = new Sphere();
-    sphere->setCenter(Vector3(0, 3, 0));
-    sphere->setRadius(2);
-    Phong *sphmat = new Phong(0, Vector3(1, 1, 1), 0);
-    sphmat->setRefraction(1.3);
-    sphmat->setTransparency(1);
-    sphere->setMaterial(sphmat);
-    g_scene->addObject(sphere);
+    Material* material = new Phong(1, 0, 0.2);
+    TriangleMesh * bunny = new TriangleMesh;
+    bunny->load("Ocean.obj");
+    addMeshTrianglesToScene(bunny, material);
+
+    //Sphere *sphere = new Sphere();
+    //sphere->setCenter(Vector3(0, 3, 0));
+    //sphere->setRadius(2);
+    //Phong *sphmat = new Phong(0, Vector3(1, 1, 1), 0);
+    //sphmat->setRefraction(1.3);
+    //sphmat->setTransparency(1);
+    //sphere->setMaterial(sphmat);
+    //g_scene->addObject(sphere);
     
     // create the floor triangle
-    TriangleMesh * floor = new TriangleMesh;
-    floor->createSingleTriangle();
-    floor->setV1(Vector3(-100, 0, -100));
-    floor->setV2(Vector3(   0, 0,  100));
-    floor->setV3(Vector3( 100, 0, -100));
-    floor->setN1(Vector3(0, 1, 0));
-    floor->setN2(Vector3(0, 1, 0));
-    floor->setN3(Vector3(0, 1, 0));
-    
-    Triangle* t = new Triangle;
-    t->setIndex(0);
-    t->setMesh(floor);
-    t->setMaterial(material); 
-    g_scene->addObject(t);
+    //TriangleMesh * floor = new TriangleMesh;
+    //floor->createSingleTriangle();
+    //floor->setV1(Vector3(-100, 0, -100));
+    //floor->setV2(Vector3(   0, 0,  100));
+    //floor->setV3(Vector3( 100, 0, -100));
+    //floor->setN1(Vector3(0, 1, 0));
+    //floor->setN2(Vector3(0, 1, 0));
+    //floor->setN3(Vector3(0, 1, 0));
+    //
+    //Triangle* t = new Triangle;
+    //t->setIndex(0);
+    //t->setMesh(floor);
+    //t->setMaterial(material); 
+    //g_scene->addObject(t);
     
     // let objects do pre-calculations if needed
     g_scene->preCalc();

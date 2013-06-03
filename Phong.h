@@ -32,6 +32,8 @@ public:
 	void setGlossy(bool is_glossy) { m_is_glossy = true; }
 	bool isGlossy() { return m_is_glossy; }
 
+    virtual bool hasBump() const {return m_texture_bump;}
+
 	void setKaTexture(shared_ptr<Material> ka_texture) { m_texture_ka = ka_texture; }
 	void setKsTexture(shared_ptr<Material> ks_texture) { m_texture_ks = ks_texture; }
 	void setKdTexture(shared_ptr<Material> kd_texture) { m_texture_kd = kd_texture; }

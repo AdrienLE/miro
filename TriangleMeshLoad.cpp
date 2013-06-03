@@ -387,6 +387,55 @@ TriangleMesh::loadObj(FILE* fp, const Matrix4x4& ctm)
 		}
 		//  else ignore line
     }
+
+    if (!m_texCoords)
+        return;
+    Vector3 *tans = new Vector3[nv * 2];
+    int *ni = new int[nv];
+    m_tangents = new Vector3[nv];
+    for (int i = 0; i < m_numTris; ++i)
+    {
+        Vector3 const &a = m_vertices[m_vertexIndices[i].x];
+        Vector3 const &b = m_vertices[m_vertexIndices[i].y];
+        Vector3 const &c = m_vertices[m_vertexIndices[i].z];
+        Vector3 ab = b - a;
+        Vector3 ac = c - a;
+        VectorR2 const &ua = m_texCoords[m_texCoordIndices[i].x];
+        VectorR2 const &ub = m_texCoords[m_texCoordIndices[i].y];
+        VectorR2 const &uc = m_texCoords[m_texCoordIndices[i].z];
+        VectorR2 uab = ub - ua;
+        VectorR2 uac = uc - ua;
+
+        float r = 1.f / (uab.x*uac.y - uac.x*uab.y);
+        Vector3 tan_a(uac.y * ab.x - uab.y * ac.x, uac.y * ab.y - uab.y * ac.y, uac.y * ab.z - uab.y * ac.z);
+        tan_a *= r;
+        Vector3 tan_b(uab.x * ac.x - uac.x * ab.x, uab.x * ac.y - uac.x * ab.y, uab.x * ac.z - uac.x * ab.z);
+        tan_b *= r;
+
+        tans[m_vertexIndices[i].x] += tan_a;
+        tans[m_vertexIndices[i].y] += tan_a;
+        tans[m_vertexIndices[i].z] += tan_a;
+
+        tans[m_vertexIndices[i].x + nv] += tan_a;
+        tans[m_vertexIndices[i].y + nv] += tan_a;
+        tans[m_vertexIndices[i].z + nv] += tan_a;
+
+        ni[m_vertexIndices[i].x] = m_normalIndices[i].x;
+        ni[m_vertexIndices[i].y] = m_normalIndices[i].y;
+        ni[m_vertexIndices[i].z] = m_normalIndices[i].z;
+    }
+    for (int i = 0; i < nv; ++i)
+    {
+        Vector3 const &normal = m_normals[ni[i]];
+        Vector3 const &tangent = tans[i];
+        Vector3 const &tangent2 = tans[i + nv];
+        if (normal.cross(tangent).dot(tans[i + nv]) < 0.f)
+            m_tangents[i] = (tangent2 - normal * normal.dot(tangent2)).normalized();
+        else
+            m_tangents[i] = (tangent - normal * normal.dot(tangent)).normalized();
+    }
+    delete[] ni;
+    delete[] tans;
 }
 
 Material*

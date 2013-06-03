@@ -22,6 +22,8 @@ public:
     virtual bool castShadow() const {return m_castShadow;}
     virtual void setCastShadow(bool b) {m_castShadow = b;}
 
+    virtual bool hasBump() const { return false; }
+
 protected:
 	Vector3 m_color;
     bool m_castShadow;

@@ -35,7 +35,7 @@ Photon_map :: Photon_map( const int max_phot )
   //----------------------------------------
 
   for (int i=0; i<256; i++) {
-    double angle = double(i)*(1.0/256.0)*M_PI;
+    double angle = double(i)*(1.0/256.0)*PI;
     costheta[i] = cos( angle );
     sintheta[i] = sin( angle );
     cosphi[i]   = cos( 2.0*angle );
@@ -123,7 +123,7 @@ void Photon_map :: irradiance_estimate(
     }
   }
 
-  const float tmp=(1.0f/M_PI)/(np.dist2[0]);	// estimate of density
+  const float tmp=(1.0f/PI)/(np.dist2[0]);	// estimate of density
 
   irrad[0] *= tmp;
   irrad[1] *= tmp;
@@ -263,13 +263,13 @@ void Photon_map :: store(
     node->power[i] = power[i];
   }
 
-  int theta = int( acos(dir[2])*(256.0/M_PI) );
+  int theta = int( acos(dir[2])*(256.0/PI) );
   if (theta>255)
     node->theta = 255;
   else
    node->theta = (unsigned char)theta;
 
-  int phi = int( atan2(dir[1],dir[0])*(256.0/(2.0*M_PI)) );
+  int phi = int( atan2(dir[1],dir[0])*(256.0/(2.0*PI)) );
   if (phi>255)
     node->phi = 255;
   else if (phi<0)

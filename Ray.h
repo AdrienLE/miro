@@ -40,6 +40,7 @@ public:
     Vector3 P;                          //!< The hit point
     Vector3 N;                          //!< Shading normal vector
     const Material* material;           //!< Material of the intersected object
+    Vector3 tangent;
 	float u;
 	float v;
 

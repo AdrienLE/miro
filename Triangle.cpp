@@ -162,9 +162,9 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             Triangle *tr = triangles->refs[min_index].tri[min];
             Vector3 *ns = tr->m_mesh->normals();
             TriangleMesh::TupleI3 *ni = tr->m_mesh->nIndices();
-            Vector3 na = ns[ni[tr->m_index].x];
-            Vector3 nb = ns[ni[tr->m_index].y];
-            Vector3 nc = ns[ni[tr->m_index].z];
+            Vector3 const &na = ns[ni[tr->m_index].x];
+            Vector3 const &nb = ns[ni[tr->m_index].y];
+            Vector3 const &nc = ns[ni[tr->m_index].z];
             float alphaf = _mm_extract_ps1(alpha, min), betaf = _mm_extract_ps1(beta, min);
             result.N = (1.0f - alphaf - betaf) * na + alphaf * nb + betaf * nc;
             //result.N = Vector3(_mm_extract_ps1(normal.x, min), _mm_extract_ps1(normal.y, min), _mm_extract_ps1(normal.z, min));
@@ -173,12 +173,21 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
             if (uvs)
             {
                 TriangleMesh::TupleI3 *uvi = tr->m_mesh->uvIndices();
-                TriangleMesh::VectorR2 uva = uvs[uvi[tr->m_index].x];
-                TriangleMesh::VectorR2 uvb = uvs[uvi[tr->m_index].y];
-                TriangleMesh::VectorR2 uvc = uvs[uvi[tr->m_index].z];
+                TriangleMesh::VectorR2 const &uva = uvs[uvi[tr->m_index].x];
+                TriangleMesh::VectorR2 const &uvb = uvs[uvi[tr->m_index].y];
+                TriangleMesh::VectorR2 const &uvc = uvs[uvi[tr->m_index].z];
                 TriangleMesh::VectorR2 uv = uva * (1 - alphaf - betaf) + uvb * alphaf + uvc * betaf;
                 result.u = uv.x;
                 result.v = uv.y;
+                if (tr->m_material->hasBump())
+                {
+                    TriangleMesh::TupleI3 *ti = tr->m_mesh->tIndices();
+                    Vector3 *ts = tr->m_mesh->tangents();
+                    Vector3 const &ta = ts[ti[tr->m_index].x];
+                    Vector3 const &tb = ts[ti[tr->m_index].y];
+                    Vector3 const &tc = ts[ti[tr->m_index].z];
+                    result.tangent = (1 - alphaf - betaf) * ta + alphaf * tb + betaf * tc;
+                }
             }
             result.material = tr->m_material;
             tMax = result.t;
@@ -219,6 +228,15 @@ bool Triangle::doIntersect(IntersectObjects const &objects, HitInfo& result,
                 TriangleMesh::VectorR2 uv = uva * (1 - alpha - beta) + uvb * alpha + uvc * beta;
                 result.u = uv.x;
                 result.v = uv.y;
+                if (tri->m_material->hasBump())
+                {
+                    TriangleMesh::TupleI3 *ti = tri->m_mesh->tIndices();
+                    Vector3 *ts = tri->m_mesh->tangents();
+                    Vector3 const &ta = ts[ti[tri->m_index].x];
+                    Vector3 const &tb = ts[ti[tri->m_index].y];
+                    Vector3 const &tc = ts[ti[tri->m_index].z];
+                    result.tangent = (1 - alpha - beta) * ta + alpha * tb + beta * tc;
+                }
             }
             // result.N = normal;
             result.N.normalize();

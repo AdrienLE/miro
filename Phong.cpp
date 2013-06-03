@@ -7,7 +7,7 @@ Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 	m_ka = ka;
 	m_ks = ks; // old: m_sp
 	m_kd = kd; // old: m_dp
-	m_bm = 1.0f;
+	m_bm = 10.0f;
 	m_tp = 0;
 	m_phong = 100;
 	m_refr = 1;
@@ -23,7 +23,7 @@ Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, c
 	m_ka = ka;
 	m_ks = Vector3(0.f);
 	m_kd = Vector3(1.f);
-	m_bm = 1.0f;
+	m_bm = 10.0f;
 	m_tp = 0;
 	m_phong = 100;
 	m_refr = 1;
@@ -39,7 +39,7 @@ Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
 	m_ka = ka;
 	m_ks = Vector3(0.f);
 	m_kd = Vector3(1.f);
-	m_bm = 1.0f;
+	m_bm = 10.0f;
 	m_tp = 0;
 	m_phong = 100;
 	m_refr = 1;
@@ -54,8 +54,34 @@ Phong::~Phong()
 {
 }
 
-void Phong::shadePhoton(const Ray &ray, const HitInfo &hit, const Scene &scene, Vector3 const &power, Photon_map *map) const
+static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &texture_bump, float bm)
 {
+    HitInfo bm_hit = rhit;
+    if (texture_bump != NULL)
+    {
+        float me = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 0).x;
+        float north = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 1).x;
+        float south = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, -1).x;
+        float east = texture_bump->getPixel(bm_hit.u, bm_hit.v, 1, 0).x;
+        float west = texture_bump->getPixel(bm_hit.u, bm_hit.v, -1, 0).x;
+
+        Vector3 pv = bm_hit.tangent;
+        Vector3 pu = bm_hit.N.cross(pu);
+
+        Vector3 offset = bm*(((north - me) - (south - me))*pu + ((east - me) - (west - me))*pv);
+        //printf("a: %f - %f\n", north - me, south - me);
+        //printf("b: %f - %f\n", east - me, west - me);
+        //printf("lol: %f - %f\n", m_bm, offset.length());
+        //printf("len: %f - %f\n", pu.length(), pv.length());
+        bm_hit.N += offset;
+        bm_hit.N.normalize();
+    }
+    return bm_hit;
+}
+
+void Phong::shadePhoton(const Ray &ray, const HitInfo &rhit, const Scene &scene, Vector3 const &power, Photon_map *map) const
+{
+    HitInfo hit = bumpHit(rhit, m_texture_bump, m_bm);
     Vector3 dcolor = m_kd * m_texture_kd->shade(ray, hit, scene);
     if (dcolor.max() > EPSILON && (!map->isCaustics() || ray.seen_specular))
     {
@@ -106,7 +132,25 @@ void Phong::shadePhoton(const Ray &ray, const HitInfo &hit, const Scene &scene, 
     {
         probability = pspec_refl;
         color = &scolor;
-        r.d = ray.d - 2*ray.d.dot(hit.N)*hit.N;
+        if (m_is_glossy)
+        {
+            Vector3 R = ray.d - 2 * ray.d.dot(hit.N) * hit.N;
+
+            Vector3 u = R.cross(randvect);
+            u.normalize();
+            Vector3 v = R.cross(u);
+            v.normalize();
+
+            float theta = acos(powf(1.0f - randone(g_rng), (1.0f / (m_phong + 1))));
+            float phi = 2.0f * PI * randone(g_rng);
+
+            r.d = 0;
+            r.d += sinf(theta) * cosf(phi) * u;
+            r.d += sinf(theta) * sinf(phi) * v;
+            r.d += cosf(theta) * R;
+        }
+        else
+            r.d = ray.d - 2*ray.d.dot(hit.N)*hit.N;
         r.seen_specular = true;
     }
     else if (russian_roulette < pr)
@@ -150,24 +194,8 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
  	Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
     const Lights *lightlist = scene.lights();
     
-	HitInfo bm_hit = rhit;
-	bm_hit.N.normalize();
-	// Bump mapping
-	if (m_texture_bump != NULL)
-	{
-		Vector3 v_bump = m_bm * m_texture_bump->shade(ray, rhit, scene);
-		Vector3 grads = m_bm * m_texture_bump->computeGradient(ray, rhit, scene);
-
-		Vector3 const &py = bm_hit.N;
-		Vector3 pu = py.cross(randvect);
-		Vector3 pv = py.cross(pu);
-
-		//bm_hit.N = bm_hit.N + (grads[1] * (bm_hit.N.cross(pv)) - grads[0] * (bm_hit.N.cross(pu))) / bm_hit.N.length();
-		bm_hit.N = pu.cross(pv);
-		bm_hit.N.normalize();
-	}
-
-
+	HitInfo bm_hit = bumpHit(rhit, m_texture_bump, m_bm);
+    
     // loop over all of the lights
     Lights::const_iterator lightIter;
 	Vector3 diffcolor = m_kd * m_texture_kd->shade(ray, bm_hit, scene);
@@ -250,7 +278,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 	// Indirect diffuse sampling (method 2)
     // printf("m_indirect: %d, max: %f\n", (int)m_indirect, m_kd.max());
 // TODO: fix m_indirect
-	if (/*m_indirect && */m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER)
+	if (/*m_indirect && */m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER && 0)
 	{
         // printf("here\n");
 		float theta = asinf((randone(g_rng)));

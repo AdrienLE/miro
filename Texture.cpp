@@ -58,25 +58,19 @@ Texture::shade(const Ray& ray, const HitInfo& hit, const Scene& scene) const
 }
 
 Vector3
-Texture::computeGradient(const Ray& ray, const HitInfo& hit, const Scene& scene) const
+Texture::getPixel(float u, float v, int x, int y) const
 {
-	if (m_img_loaded)
-	{
-		int x = (int) (fmodf(std::abs(hit.u), 1) * m_img.width());
-		int y = (int) (fmodf(std::abs(hit.v), 1) * m_img.height());
-
-		int x_minus = x > 0 ? x - 1 : m_img.width() - 1;
-		int y_minus = y > 0 ? y - 1 : m_img.height() - 1;
-		int x_plus = x + 1 < m_img.width() ? x + 1 : 0;
-		int y_plus = y + 1 < m_img.height() ? y + 1 : 0;
-
-
-		boost::gil::rgb8_pixel_t pixel1 = m_img._view(x_minus, y);
-		boost::gil::rgb8_pixel_t pixel2 = m_img._view(x_plus, y);
-		boost::gil::rgb8_pixel_t pixel3 = m_img._view(x, y_minus);
-		boost::gil::rgb8_pixel_t pixel4 = m_img._view(x, y_plus);
-		return Vector3(pixel1[0] - pixel2[0], pixel3[0] - pixel4[0], 0);
-	}
-	else
-		return m_color;
+    if (m_img_loaded)
+    {
+        int posx = fmodf(std::abs(u), 1) * m_img.width() + x;
+        posx = (posx + m_img.width()) % m_img.width();
+        int posy = fmodf(std::abs(v), 1) * m_img.height() + y;
+        posy = (posy + m_img.height()) %m_img.height();
+        boost::gil::rgb8_pixel_t pixel = m_img._view(posx, posy);
+        return Vector3(pixel[0] / 255.f, pixel[1] / 255.f, pixel[2] / 255.f);
+    }
+    else
+    {
+        return m_color;
+    }
 }

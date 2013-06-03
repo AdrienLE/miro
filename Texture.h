@@ -16,10 +16,9 @@ public:
     
     virtual Vector3 shade(const Ray& ray, const HitInfo& hit,
                           const Scene& scene) const;
-	Vector3 computeGradient(const Ray& ray, const HitInfo& hit,
-						  const Scene& scene) const;
 	void setTexturePath(const std::string& texture_path);
 	const std::string& getTexturePath() { return m_texture_path; }
+    Vector3 getPixel(float u, float v, int x, int y) const;
 
 protected:
 	void loadTexture();
