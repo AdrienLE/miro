@@ -1,6 +1,7 @@
 #include "Phong.h"
 #include "Ray.h"
 #include "Scene.h"
+#include "Perlin.h"
 
 Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 {
@@ -65,14 +66,33 @@ static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &te
         float east = texture_bump->getPixel(bm_hit.u, bm_hit.v, 1, 0).x;
         float west = texture_bump->getPixel(bm_hit.u, bm_hit.v, -1, 0).x;
 
+		float height = 0.25f;
+		float noise_x = float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.x), 
+															  height * double(bm_hit.P.y),
+															  height * double(bm_hit.P.z)), 4));
+		float noise_y = float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.y), 
+															  height * double(bm_hit.P.z),
+															  height * double(bm_hit.P.x)), 4));
+		float noise_z = float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.z), 
+															  height * double(bm_hit.P.x),
+															  height * double(bm_hit.P.y)), 4));
+
         Vector3 pv = bm_hit.tangent;
         Vector3 pu = bm_hit.N.cross(pu);
-        Vector3 offset = 20*-bm*(((north - me) - (south - me))*pv + ((east - me) - (west - me))*pu);
-        //printf("a: %f - %f\n", north - me, south - me);
+
+        Vector3 offset = -1*(((north - me) - (south - me))*pv + ((east - me) - (west - me))*pu);
+
+		//printf("a: %f - %f\n", north - me, south - me);
         //printf("b: %f - %f\n", east - me, west - me);
         //printf("lol: %f - %f\n", m_bm, offset.length());
         //printf("len: %f - %f\n", pu.length(), pv.length());
-        bm_hit.N += offset;
+       
+		//bm_hit.N += offset;
+
+		bm_hit.N.x = (1.0f - bm) * bm_hit.N.x + bm * noise_x;
+		bm_hit.N.y = (1.0f - bm) * bm_hit.N.y + bm * noise_y;
+		bm_hit.N.z = (1.0f - bm) * bm_hit.N.z + bm * noise_z;
+
         bm_hit.N.normalize();
     }
     return bm_hit;

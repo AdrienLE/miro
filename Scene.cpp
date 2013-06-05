@@ -9,7 +9,7 @@
 
 Scene * g_scene = 0;
 
-Scene::Scene()  : m_bgColor(0.f), m_global_photons(200000), m_caustics_photons(2000000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
+Scene::Scene()  : m_bgColor(0.f), m_global_photons(0), m_caustics_photons(0), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
 
 void
 Scene::openGL(Camera *cam)
@@ -19,9 +19,18 @@ Scene::openGL(Camera *cam)
     cam->drawGL();
 
     // draw objects
-    // for (size_t i = 0; i < m_objects.size(); ++i)
-    //     m_objects[i]->renderGL();
-    g_caustics_map->renderGL();
+    for (size_t i = 0; i < m_objects.size(); ++i)
+		m_objects[i]->renderGL();
+	for (size_t i = 0; i < m_lights.size(); ++i)
+	{
+		glColor3f(1, 1, 0.2);
+		glPushMatrix();
+		glTranslatef(m_lights[i]->position().x, m_lights[i]->position().y, m_lights[i]->position().z);
+		glutSolidSphere(2, 20, 20);
+		glPopMatrix();
+		glColor3f(1, 1, 1);
+	}
+    //g_caustics_map->renderGL();
 
     glutSwapBuffers();
 }
@@ -30,12 +39,19 @@ void Scene::sampleMap(Photon_map *map, int n_photons, float total_wattage)
 {
     Lights::iterator lit;
     std::vector<float> refr_stack;
+    int total = 0;
     for (lit = m_lights.begin(); lit != m_lights.end(); ++lit)
     {
         int photons = (*lit)->wattage() * n_photons / total_wattage;
         float power = (*lit)->wattage() / photons;
         for (int i = 0; i < photons; ++i)
         {
+            if (total % 1000 == 0)
+			{
+                printf("%.2f%%\r", 100 * total / ((float) n_photons));
+				fflush(stdout);
+			}
+            total++;
             Ray ray;
             do
             {
@@ -54,6 +70,7 @@ void Scene::sampleMap(Photon_map *map, int n_photons, float total_wattage)
                 h.material->shadePhoton(ray, h, *this, power * (*lit)->color(), map);
         }
     }
+    printf("100.00%\n");
     map->balance();
 }
 
@@ -82,9 +99,10 @@ Scene::preCalc()
     delete g_caustics_map;
     g_caustics_map = new Photon_map(m_caustics_photons);
     g_caustics_map->setCaustics(true);
-    printf("photons: %d\n", m_caustics_photons);
 
+    printf("Caustics map:\n");
     sampleMap(g_caustics_map, m_caustics_photons, total_wattage);
+    printf("Global illum map\n");
     sampleMap(g_global_illum_map, m_global_photons, total_wattage);
 }
 

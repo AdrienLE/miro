@@ -227,6 +227,8 @@ MiroWindow::keyboard(unsigned char key, int x, int y)
         default:
         break;
     }
+	printf("Eye: %f, %f, %f\n", g_camera->eye()[0], g_camera->eye()[1], g_camera->eye()[2]);
+
     glutPostRedisplay();
 }
 

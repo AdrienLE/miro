@@ -4,7 +4,7 @@
 #include "Vector3.h"
 #include <vector>
 
-#define MAX_RAY_ITER 6
+#define MAX_RAY_ITER 4
 
 class Ray
 {
