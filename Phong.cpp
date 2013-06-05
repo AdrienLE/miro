@@ -67,8 +67,7 @@ static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &te
 
         Vector3 pv = bm_hit.tangent;
         Vector3 pu = bm_hit.N.cross(pu);
-
-        Vector3 offset = bm*(((north - me) - (south - me))*pu + ((east - me) - (west - me))*pv);
+        Vector3 offset = 20*-bm*(((north - me) - (south - me))*pv + ((east - me) - (west - me))*pu);
         //printf("a: %f - %f\n", north - me, south - me);
         //printf("b: %f - %f\n", east - me, west - me);
         //printf("lol: %f - %f\n", m_bm, offset.length());
@@ -315,7 +314,9 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 //diff_res = scene.bgColor();
 	}
 
-    if ((1 - m_tp) * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
+    float roulette = randone(g_rng);
+
+    if (roulette > m_tp && (1 - m_tp) * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
     {
         Ray newray;
 		newray.iter = ray.iter + 1;
@@ -355,7 +356,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
         }
     }
 
-    if (m_tp * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
+    if (roulette < m_tp && m_tp * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
     {
         Ray newray;
         newray.refractionStack = ray.refractionStack;
