@@ -9,7 +9,7 @@
 
 Scene * g_scene = 0;
 
-Scene::Scene()  : m_bgColor(0.f), m_global_photons(0), m_caustics_photons(0), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
+Scene::Scene()  : m_bgColor(0.f), m_global_photons(200000), m_caustics_photons(2000000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
 
 void
 Scene::openGL(Camera *cam)
@@ -30,7 +30,7 @@ Scene::openGL(Camera *cam)
 		glPopMatrix();
 		glColor3f(1, 1, 1);
 	}
-    //g_caustics_map->renderGL();
+    g_caustics_map->renderGL();
 
     glutSwapBuffers();
 }

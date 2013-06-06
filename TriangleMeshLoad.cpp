@@ -134,7 +134,6 @@ TriangleMesh::loadMtl(std::string file_name)
 			current_mtl_name.erase(std::remove(current_mtl_name.begin(), current_mtl_name.end(), '\r'), current_mtl_name.end());
 
 			current_phong_mtl = new Phong(0.8f, 1.0f, 0.2f);
-			current_phong_mtl->setIndirectLighting(false);
 
 			m_mtls[current_mtl_name] = current_phong_mtl;
 		}

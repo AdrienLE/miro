@@ -58,6 +58,7 @@ Phong::~Phong()
 static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &texture_bump, float bm)
 {
     HitInfo bm_hit = rhit;
+
     if (texture_bump != NULL)
     {
         float me = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 0).x;
@@ -89,6 +90,7 @@ static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &te
        
 		//bm_hit.N += offset;
 
+		
 		bm_hit.N.x = (1.0f - bm) * bm_hit.N.x + bm * noise_x;
 		bm_hit.N.y = (1.0f - bm) * bm_hit.N.y + bm * noise_y;
 		bm_hit.N.z = (1.0f - bm) * bm_hit.N.z + bm * noise_z;
@@ -109,7 +111,8 @@ void Phong::shadePhoton(const Ray &ray, const HitInfo &rhit, const Scene &scene,
         Vector3 const &dir = ray.d;
         map->store(powe.array(), position.array(), dir.array());
     }
-    if (ray.iter > MAX_RAY_ITER) return; // TODO: remove this?
+    if (ray.iter > MAX_RAY_ITER) 
+		return;
     Vector3 scolor = m_ks * m_texture_ks->shade(ray, hit, scene);
     Vector3 total_color = dcolor + scolor;
     float pr = total_color.max();
@@ -180,13 +183,13 @@ void Phong::shadePhoton(const Ray &ray, const HitInfo &rhit, const Scene &scene,
         if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
         {
             r.refractionIndex = ray.refractionIndex - 1;
-            ratio = m_refr / (*r.refractionStack)[r.refractionIndex];
+			ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
         }
         else if ((*ray.refractionStack)[ray.refractionIndex] != m_refr)
         {
             r.refractionIndex = ray.refractionIndex + 1;
             r.refractionStack->push_back(m_refr);
-            ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
+			ratio = m_refr / (*r.refractionStack)[r.refractionIndex];            
         }
         Vector3 w = -ray.d;
         float dDotN = w.dot(hit.N);
@@ -282,7 +285,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
         if (m_ks.max() > EPSILON && nDotL > 0)
         {
             Vector3 refl = -lightray.d + 2*nDotL*bm_hit.N;
-            L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor;
+            L += std::max(0.f, powf((-ray.d).dot(refl), m_phong)) * result * speccolor * (1 - m_tp);
             //Vector3 half = -ray.d + hit.N;
             //half.normalize();
             //L += std::max(0.f, powf(half.dot(hit.N), 1000)) * result * speccolor * m_sp;
@@ -290,16 +293,13 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
     }
 
     float caustic[3] = {0, 0, 0};
-    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 5.0f, 50); // TODO: customize these parameters
+    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 50.0f, 50); // TODO: customize these parameters
     Vector3 caustic_color(caustic);
     L += caustic_color;
 
 	// Indirect diffuse sampling (method 2)
-    // printf("m_indirect: %d, max: %f\n", (int)m_indirect, m_kd.max());
-// TODO: fix m_indirect
-	if (/*m_indirect && */m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER && 0)
+	if (m_indirect && m_kd.max() > EPSILON && ray.iter < MAX_RAY_ITER)
 	{
-        // printf("here\n");
 		float theta = asinf((randone(g_rng)));
 		float phi = 2 * PI * randone(g_rng);
 		Vector3 const &yaxis = bm_hit.N;
@@ -377,39 +377,42 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
     }
 
     if (roulette < m_tp && m_tp * m_ks.max() > EPSILON && ray.iter < MAX_RAY_ITER)
-    {
-        Ray newray;
+	{
+		Ray newray;
         newray.refractionStack = ray.refractionStack;
         newray.refractionIndex = ray.refractionIndex;
         float ratio = 1.0;
         if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
         {
             newray.refractionIndex = ray.refractionIndex - 1;
-            ratio = m_refr / (*newray.refractionStack)[newray.refractionIndex];
+			ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
         }
         else if ((*ray.refractionStack)[ray.refractionIndex] != m_refr)
         {
             newray.refractionIndex = ray.refractionIndex + 1;
             newray.refractionStack->push_back(m_refr);
-            ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
+			ratio = m_refr / (*newray.refractionStack)[newray.refractionIndex];            
         }
         newray.o = bm_hit.P;
         Vector3 w = -ray.d;
         float dDotN = w.dot(bm_hit.N);
         if (dDotN < 0)
             dDotN = -dDotN;
-        newray.d = -ratio * (w - dDotN*bm_hit.N) - sqrtf(1 - ratio*ratio*(1 - dDotN*dDotN)) * bm_hit.N;
-        newray.d.normalize();
-        newray.iter = ray.iter + 1;
-        HitInfo minHit;
-        if (scene.trace(minHit, newray, EPSILON))
-        {
-            L += minHit.material->shade(newray, minHit, scene) * m_tp * speccolor;
-        }
-        else
-        {
-            L += scene.bgColor() * m_tp * speccolor;
-        }
+		if (1 - ratio*ratio*(1 - dDotN*dDotN) >= 0)
+		{
+			newray.d = -ratio * (w - dDotN*bm_hit.N) - sqrtf(1 - ratio*ratio*(1 - dDotN*dDotN)) * bm_hit.N;
+			newray.d.normalize();
+			newray.iter = ray.iter + 1;
+			HitInfo minHit;
+			if (scene.trace(minHit, newray, EPSILON))
+			{
+				L += minHit.material->shade(newray, minHit, scene) * speccolor;
+			}
+			else
+			{
+				L += scene.bgColor() * m_tp * speccolor;
+			}
+		}
     }
 
     // We are assuming the diffuse color and ambient color are the same here.

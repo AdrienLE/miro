@@ -200,7 +200,7 @@ makeFinalScene()
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-    g_scene->setSamples(10);
+    g_scene->setSamples(4);
     g_scene->setCutoffs(0);
 
     // point light in the cave
@@ -208,7 +208,7 @@ makeFinalScene()
     light->setPosition(Vector3(8.86, 20, 0));
     light->setColor(Vector3(1, 1, 1));
     light->setWattage(7000);
-    //g_scene->addLight(light);
+    g_scene->addLight(light);
 
 	Sphere *sphere = new Sphere();
 	sphere->setRadius(4);
@@ -216,10 +216,9 @@ makeFinalScene()
     transp->setRefraction(1.3);
     transp->setTransparency(0.9);
     transp->setPhong(30);
-	transp->setIndirectLighting(false);
 	sphere->setMaterial(transp);
 	sphere->setCenter(Vector3(8.86, 6, 0));
-	//g_scene->addObject(sphere);
+	g_scene->addObject(sphere);
 
 
 	sphere = new Sphere();
@@ -240,7 +239,7 @@ makeFinalScene()
     mscale *= scale(0.1, 0.1, 0.1);
 
     TriangleMesh *object = new TriangleMesh;
-    object->load("cave_hd.obj");
+    object->load("cave_low.obj");
     addMeshTrianglesToScene(object, material);
 
 	// lights in the cave
@@ -251,125 +250,125 @@ makeFinalScene()
     light->setPosition(Vector3(-12, 38, 125.5));
     light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
     light->setWattage(light_watt * 0.1);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 38, 125.6));
     light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
     light->setWattage(light_watt * 0.1);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(-12, 11, 125.5));
     light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
     light->setWattage(light_watt * 0.1);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 11, 125.6));
     light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
     light->setWattage(light_watt * 0.1);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	//2
 	light = new PointLight;
     light->setPosition(Vector3(-12, 38, 53));
     light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 38, 53));
     light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(-12, 11, 53));
     light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 11, 53));
     light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	//3
 	light = new PointLight;
     light->setPosition(Vector3(-12, 38, -19));
     light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 38, -19));
     light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(-12, 11, -19));
     light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 11, -19));
     light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	//4
 	light = new PointLight;
     light->setPosition(Vector3(-12, 38, -91));
     light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 38, -91));
     light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(-12, 11, -91));
     light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 11, -91));
     light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
     light->setWattage(light_watt * 0.25);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	//5
 	light = new PointLight;
     light->setPosition(Vector3(-12, 38, -163));
     light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
     light->setWattage(light_watt * 0.55);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 38, -163));
     light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
     light->setWattage(light_watt * 0.55);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(-12, 11, -163));
     light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
     light->setWattage(light_watt * 0.55);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
 
 	light = new PointLight;
     light->setPosition(Vector3(14.5, 11, -163));
     light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
     light->setWattage(light_watt * 0.55);
-    g_scene->addLight(light);
+    //g_scene->addLight(light);
     // let objects do pre-calculations if needed
     g_scene->preCalc();
 }
@@ -838,7 +837,6 @@ addMeshTrianglesToScene(TriangleMesh * mesh, Material * material)
 		Material *mat = mesh->getMaterialForId(i);
 		if (mat == NULL)
 			mat = material;
-		((Phong*)mat)->setIndirectLighting(false);
         t->setMaterial(mat); 
         g_scene->addObject(t);
     }
