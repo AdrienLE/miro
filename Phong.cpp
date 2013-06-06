@@ -203,7 +203,7 @@ void Phong::shadePhoton(const Ray &ray, const HitInfo &rhit, const Scene &scene,
         return;
 
     HitInfo h;
-    if (scene.trace(h, r))
+    if (scene.trace(h, r, EPSILON))
     {
         h.material->shadePhoton(r, h, scene, power * *color / probability, map);
     }
