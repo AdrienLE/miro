@@ -67,14 +67,14 @@ static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &te
         float east = texture_bump->getPixel(bm_hit.u, bm_hit.v, 1, 0).x;
         float west = texture_bump->getPixel(bm_hit.u, bm_hit.v, -1, 0).x;
 
-		float height = 0.25f;
-		float noise_x = float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.x), 
+		float height = .25f;
+		float noise_x = me * float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.x), 
 															  height * double(bm_hit.P.y),
 															  height * double(bm_hit.P.z)), 4));
-		float noise_y = float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.y), 
+		float noise_y = me * float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.y), 
 															  height * double(bm_hit.P.z),
 															  height * double(bm_hit.P.x)), 4));
-		float noise_z = float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.z), 
+		float noise_z = me * float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.z), 
 															  height * double(bm_hit.P.x),
 															  height * double(bm_hit.P.y)), 4));
 
@@ -180,21 +180,23 @@ void Phong::shadePhoton(const Ray &ray, const HitInfo &rhit, const Scene &scene,
         probability = pspec_refr;
         color = &scolor;
         float ratio = 1.0;
-        if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
+		if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
         {
             r.refractionIndex = ray.refractionIndex - 1;
-			ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
+            ratio = m_refr / (*r.refractionStack)[r.refractionIndex];
         }
         else if ((*ray.refractionStack)[ray.refractionIndex] != m_refr)
         {
             r.refractionIndex = ray.refractionIndex + 1;
             r.refractionStack->push_back(m_refr);
-			ratio = m_refr / (*r.refractionStack)[r.refractionIndex];            
+            ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
         }
         Vector3 w = -ray.d;
         float dDotN = w.dot(hit.N);
         if (dDotN < 0)
             dDotN = -dDotN;
+        if (1 - ratio*ratio*(1 - dDotN*dDotN) < 0)
+            return;
         r.d = -ratio * (w - dDotN*hit.N) - sqrtf(1 - ratio*ratio*(1 - dDotN*dDotN)) * hit.N;
         r.d.normalize();
         r.seen_specular = true;
@@ -382,16 +384,16 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
         newray.refractionStack = ray.refractionStack;
         newray.refractionIndex = ray.refractionIndex;
         float ratio = 1.0;
-        if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
+		if ((*ray.refractionStack)[ray.refractionIndex] == m_refr && m_refr != 1.0)
         {
             newray.refractionIndex = ray.refractionIndex - 1;
-			ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
+            ratio = m_refr / (*newray.refractionStack)[newray.refractionIndex];
         }
         else if ((*ray.refractionStack)[ray.refractionIndex] != m_refr)
         {
             newray.refractionIndex = ray.refractionIndex + 1;
             newray.refractionStack->push_back(m_refr);
-			ratio = m_refr / (*newray.refractionStack)[newray.refractionIndex];            
+            ratio = (*ray.refractionStack)[ray.refractionIndex] / m_refr;
         }
         newray.o = bm_hit.P;
         Vector3 w = -ray.d;

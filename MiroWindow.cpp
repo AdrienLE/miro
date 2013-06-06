@@ -77,6 +77,20 @@ MiroWindow::display()
     g_camera->click(g_scene, g_image); // take a snapshot of the scene
 
     glFinish(); // flush the openGL pipeline
+
+            char str[1024];
+            sprintf(str, "miro_%d.ppm", time(0));
+            if (g_camera->isOpenGL())
+            {
+                unsigned char* buf = new unsigned char[g_image->width()*g_image->height()*3];
+                glReadPixels(0, 0, g_image->width(), g_image->height(),
+                             GL_RGB, GL_UNSIGNED_BYTE, buf);
+                g_image->writePPM(str, buf, g_image->width(), g_image->height());
+            }
+            else
+            {
+                g_image->writePPM(str);
+            }
 }
 
 

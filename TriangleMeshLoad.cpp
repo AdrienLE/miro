@@ -136,6 +136,11 @@ TriangleMesh::loadMtl(std::string file_name)
 			current_phong_mtl = new Phong(0.8f, 1.0f, 0.2f);
 
 			m_mtls[current_mtl_name] = current_phong_mtl;
+			if (current_mtl_name == "wire_088143225")
+			{
+				current_phong_mtl->setCastShadow(false);
+				printf("Shadow disabled on wire.\n");
+			}
 		}
 		else if(!strcmp(current_token, "Ka") && material_open) // Ka r g b => The Ka statement specifies the ambient reflectivity using RGB values (range: [0, 1])
 		{
