@@ -7,4 +7,6 @@ void makeSponzaScene();
 void makeFinalScene();
 void makeDepthScene();
 void makeGlossyScene();
-
+void makeCornellScene();
+void makeNoiseBumpScene();
+void makeAllInOneScene();

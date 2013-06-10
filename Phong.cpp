@@ -1,7 +1,4 @@
 #include "Phong.h"
-#include "Ray.h"
-#include "Scene.h"
-#include "Perlin.h"
 
 Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 {
@@ -17,6 +14,9 @@ Phong::Phong(const Vector3 & kd, const Vector3 &ks, const Vector3 &ka)
 	m_texture_ks = shared_ptr<Material>(new Material());
 	m_texture_kd = shared_ptr<Material>(new Material());
 	m_is_glossy = false;
+	m_is_bump_noisy = false;
+	m_bump_noise_height = 1;
+	m_bump_noise_turbulence = 1;
 }
 
 Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, const Vector3 &ka)
@@ -33,6 +33,9 @@ Phong::Phong(shared_ptr<Material> texture_kd, shared_ptr<Material> texture_ks, c
 	m_texture_ks = texture_ks;
 	m_texture_ka = shared_ptr<Material>(new Material());
 	m_is_glossy = false;
+	m_is_bump_noisy = false;
+	m_bump_noise_height = 1;
+	m_bump_noise_turbulence = 1;
 }
 
 Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
@@ -49,60 +52,54 @@ Phong::Phong(shared_ptr<Material> texture_kd, const Vector3 &ka)
 	m_texture_ks = shared_ptr<Material>(new Material());
 	m_texture_ka = shared_ptr<Material>(new Material());
 	m_is_glossy = false;
+	m_is_bump_noisy = false;
+	m_bump_noise_height = 1;
+	m_bump_noise_turbulence = 1;
 }
 
 Phong::~Phong()
 {
 }
 
-static HitInfo bumpHit(HitInfo const &rhit, boost::shared_ptr<Texture> const &texture_bump, float bm)
+HitInfo Phong::bumpHit(HitInfo const &rhit) const
 {
     HitInfo bm_hit = rhit;
 
-    if (texture_bump != NULL)
-    {
-        float me = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 0).x;
-        float north = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 1).x;
-        float south = texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, -1).x;
-        float east = texture_bump->getPixel(bm_hit.u, bm_hit.v, 1, 0).x;
-        float west = texture_bump->getPixel(bm_hit.u, bm_hit.v, -1, 0).x;
-
-		float height = .25f;
-		float noise_x = me * float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.x), 
-															  height * double(bm_hit.P.y),
-															  height * double(bm_hit.P.z)), 4));
-		float noise_y = me * float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.y), 
-															  height * double(bm_hit.P.z),
-															  height * double(bm_hit.P.x)), 4));
-		float noise_z = me * float(PerlinNoise::turbulence(Vector3(height * double(bm_hit.P.z), 
-															  height * double(bm_hit.P.x),
-															  height * double(bm_hit.P.y)), 4));
-
-        Vector3 pv = bm_hit.tangent;
-        Vector3 pu = bm_hit.N.cross(pu);
-
-        Vector3 offset = -1*(((north - me) - (south - me))*pv + ((east - me) - (west - me))*pu);
-
-		//printf("a: %f - %f\n", north - me, south - me);
-        //printf("b: %f - %f\n", east - me, west - me);
-        //printf("lol: %f - %f\n", m_bm, offset.length());
-        //printf("len: %f - %f\n", pu.length(), pv.length());
-       
-		//bm_hit.N += offset;
-
+	if (m_is_bump_noisy)
+	{
+		float noise_x = float(PerlinNoise::turbulence(Vector3(m_bump_noise_height * double(bm_hit.P.x), 
+															  m_bump_noise_height * double(bm_hit.P.y),
+															  m_bump_noise_height * double(bm_hit.P.z)), m_bump_noise_turbulence));
+		float noise_y = float(PerlinNoise::turbulence(Vector3(m_bump_noise_height * double(bm_hit.P.y), 
+															  m_bump_noise_height * double(bm_hit.P.z),
+															  m_bump_noise_height * double(bm_hit.P.x)), m_bump_noise_turbulence));
+		float noise_z = float(PerlinNoise::turbulence(Vector3(m_bump_noise_height * double(bm_hit.P.z), 
+															  m_bump_noise_height * double(bm_hit.P.x),
+															  m_bump_noise_height * double(bm_hit.P.y)), m_bump_noise_turbulence));
+		bm_hit.N.x = (1.0f - m_bm) * bm_hit.N.x + m_bm * noise_x;
+		bm_hit.N.y = (1.0f - m_bm) * bm_hit.N.y + m_bm * noise_y;
+		bm_hit.N.z = (1.0f - m_bm) * bm_hit.N.z + m_bm * noise_z;
+	}
+	else if (m_texture_bump != NULL)
+	{
+		float me = m_texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 0).x;
+		float north = m_texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, 1).x;
+		float south = m_texture_bump->getPixel(bm_hit.u, bm_hit.v, 0, -1).x;
+		float east = m_texture_bump->getPixel(bm_hit.u, bm_hit.v, 1, 0).x;
+		float west = m_texture_bump->getPixel(bm_hit.u, bm_hit.v, -1, 0).x;
 		
-		bm_hit.N.x = (1.0f - bm) * bm_hit.N.x + bm * noise_x;
-		bm_hit.N.y = (1.0f - bm) * bm_hit.N.y + bm * noise_y;
-		bm_hit.N.z = (1.0f - bm) * bm_hit.N.z + bm * noise_z;
-
-        bm_hit.N.normalize();
-    }
+		Vector3 pv = bm_hit.tangent;
+		Vector3 pu = bm_hit.N.cross(pu);
+		Vector3 offset = -100 * m_bm *(((north - me) - (south - me))*pv + ((east - me) - (west - me))*pu);
+		bm_hit.N += offset;
+	}
+	bm_hit.N.normalize();		
     return bm_hit;
 }
 
 void Phong::shadePhoton(const Ray &ray, const HitInfo &rhit, const Scene &scene, Vector3 const &power, Photon_map *map) const
 {
-    HitInfo hit = bumpHit(rhit, m_texture_bump, m_bm);
+    HitInfo hit = bumpHit(rhit);
     Vector3 dcolor = m_kd * m_texture_kd->shade(ray, hit, scene);
     if (dcolor.max() > EPSILON && (!map->isCaustics() || ray.seen_specular))
     {
@@ -218,7 +215,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
  	Vector3 randvect(randone(g_rng), randone(g_rng), randone(g_rng));
     const Lights *lightlist = scene.lights();
     
-	HitInfo bm_hit = bumpHit(rhit, m_texture_bump, m_bm);
+	HitInfo bm_hit = bumpHit(rhit);
     
     // loop over all of the lights
     Lights::const_iterator lightIter;
@@ -295,7 +292,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
     }
 
     float caustic[3] = {0, 0, 0};
-    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 50.0f, 50); // TODO: customize these parameters
+    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 1.5f, 800); // TODO: customize these parameters
     Vector3 caustic_color(caustic);
     L += caustic_color;
 
@@ -332,8 +329,6 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 		else
             diff_res = scene.bgColor();
         L += (diffcolor * diff_res) / PI;
-
-//diff_res = scene.bgColor();
 	}
 
     float roulette = randone(g_rng);
@@ -417,7 +412,6 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
 		}
     }
 
-    // We are assuming the diffuse color and ambient color are the same here.
 	L += m_ka * m_texture_ka->shade(ray, bm_hit, scene);
 
     return L;

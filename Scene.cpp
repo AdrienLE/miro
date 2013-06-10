@@ -9,7 +9,7 @@
 
 Scene * g_scene = 0;
 
-Scene::Scene()  : m_bgColor(0.f), m_global_photons(200000), m_caustics_photons(10000000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
+Scene::Scene()  : m_bgColor(0.f), m_global_photons(0), m_caustics_photons(500000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
 
 void
 Scene::openGL(Camera *cam)
@@ -26,7 +26,7 @@ Scene::openGL(Camera *cam)
 		glColor3f(1, 1, 0.2);
 		glPushMatrix();
 		glTranslatef(m_lights[i]->position().x, m_lights[i]->position().y, m_lights[i]->position().z);
-		glutSolidSphere(2, 20, 20);
+		glutSolidSphere(1, 10, 10);
 		glPopMatrix();
 		glColor3f(1, 1, 1);
 	}
@@ -102,7 +102,7 @@ Scene::preCalc()
 
     printf("Caustics map:\n");
     sampleMap(g_caustics_map, m_caustics_photons, total_wattage);
-    printf("Global illum map\n");
+    printf("Global illum map:\n");
     sampleMap(g_global_illum_map, m_global_photons, total_wattage);
 }
 
@@ -178,7 +178,7 @@ void
 Scene::raytraceImage(Camera *cam, Image *img)
 {
     boost::timer::auto_cpu_timer t;
-    boost::threadpool::pool threadpool(nCpus() * 2);
+    boost::threadpool::pool threadpool(7);//nCpus() * 2);
     std::vector<boost::packaged_task<std::vector<Vector3 *> > * > tasks;
     std::vector<boost::unique_future<std::vector<Vector3 *> > * > lines;
 

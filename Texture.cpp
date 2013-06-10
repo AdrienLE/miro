@@ -26,12 +26,12 @@ Texture::loadTexture()
 	try
 	{
 	    boost::gil::jpeg_read_image(m_texture_path, m_img);
-		printf("GIL: ('%s') texture map loaded\n", m_texture_path.c_str());
+		printf("[Texture] GIL: ('%s') texture map loaded\n", m_texture_path.c_str());
 		m_img_loaded = true;
 	}
 	catch (std::exception &e)
 	{
-		printf("GIL: ('%s') %s\n", m_texture_path.c_str(), e.what());
+		printf("[Texture] GIL: ('%s') %s\n", m_texture_path.c_str(), e.what());
 		m_img_loaded = false;
 	}
 }

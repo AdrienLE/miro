@@ -128,8 +128,9 @@ makeLorenzScene()
 int
 main(int argc, char*argv[])
 {
+	srand(time(NULL));
     // create a scene
-	makeFinalScene();
+	makeAllInOneScene();
 
     MiroWindow miro(&argc, argv);
     miro.mainLoop();

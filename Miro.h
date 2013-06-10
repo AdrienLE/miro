@@ -1,6 +1,6 @@
 #ifndef __MIRO_H__
 #define __MIRO_H__
-
+#include <stdlib.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 
@@ -52,7 +52,9 @@ extern boost::mt19937 g_rng;
 inline float randone(const boost::mt19937& g_rng)
 {
 #ifdef WIN32
-    return ((float)rand())/RAND_MAX;
+	unsigned int r;
+	rand_s(&r);
+	return ((float)r)/UINT_MAX;
 #else
 	return drand48();
 #endif

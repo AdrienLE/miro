@@ -136,11 +136,6 @@ TriangleMesh::loadMtl(std::string file_name)
 			current_phong_mtl = new Phong(0.8f, 1.0f, 0.2f);
 
 			m_mtls[current_mtl_name] = current_phong_mtl;
-			if (current_mtl_name == "wire_088143225")
-			{
-				current_phong_mtl->setCastShadow(false);
-				printf("Shadow disabled on wire.\n");
-			}
 		}
 		else if(!strcmp(current_token, "Ka") && material_open) // Ka r g b => The Ka statement specifies the ambient reflectivity using RGB values (range: [0, 1])
 		{
@@ -166,17 +161,9 @@ TriangleMesh::loadMtl(std::string file_name)
 		{
 			current_phong_mtl->setKs(atof(strtok(NULL, " \t")));
 		}
-		else if(!strcmp(current_token, "sharpness") && material_open) // sharpness value => Specifies the sharpness of the reflections from the local reflection map (range: [0, 1000])  The default is 60.
-		{
-			// NOT IMPLEMENTED
-		}
 		else if(!strcmp(current_token, "Ni") && material_open) // Ni optical_density => Specifies the optical density for the surface.  This is also known as index of refraction (range: [0.001 to 10])
 		{
 			current_phong_mtl->setRefraction(atof(strtok(NULL, " \t")));
-		}
-		else if(!strcmp(current_token, "illum") && material_open) // Illumination model => We use the default model. It will probably never be implemented in this raytracer
-		{
-			// NOT IMPLEMENTED
 		}
 		else if(!strcmp(current_token, "map_Kd") && material_open) // map_Kd filename => Specifies that a color texture file is linked to the diffuse reflectivity of the material. The map_Kd value is multiplied by the Kd value.
 		{
@@ -209,23 +196,6 @@ TriangleMesh::loadMtl(std::string file_name)
 			else
 				bump_texture->setTexturePath(current_token);
 			current_phong_mtl->setBumpTexture(shared_ptr<Texture>(bump_texture));
-		}
-		else if (!strcmp(current_token, "map_d") && material_open) // map_d filename => Specifies that a scalar texture file is linked to the dissolve of the material. The map_d value is multiplied by the d value
-		{
-			// NOT IMPLEMENTED		
-		}
-		else if (!strcmp(current_token, "refl") && material_open) // reflection map statement
-		{
-			// NOT IMPLEMENTED
-		}
-		else if (!strcmp(current_token, "map_Ns") && material_open) // map_Ns filename => Specifies that a scalar texture file is linked to the specular exponent of the material. The map_Ns value is multiplied by the Ns value
-		{
-			// NOT IMPLEMENTED
-		}
-		else // unknown argument
-		{
-			fprintf(stderr, "Unknown mtl argument '%s' in material file %s at line %i:\n\t%s\n",
-					current_token, file_name.c_str(), line_number, current_line);
 		}
 	}
 	fclose(fp);

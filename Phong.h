@@ -3,6 +3,9 @@
 
 #include "Material.h"
 #include "Texture.h"
+#include "Ray.h"
+#include "Scene.h"
+#include "Perlin.h"
 
 class Phong : public Material
 {
@@ -31,6 +34,9 @@ public:
 	void setBm(float bm) { m_bm = bm; }
 	void setGlossy(bool is_glossy) { m_is_glossy = true; }
 	bool isGlossy() { return m_is_glossy; }
+	void setBumpNoisy(float height, int turbulence = 1) { m_is_bump_noisy = true; m_bump_noise_height = height; m_bump_noise_turbulence = turbulence; }
+	bool isBumpNoisy() { return m_is_bump_noisy; }
+	void setIsBumpNoisy(bool is_noisy) { m_is_bump_noisy = is_noisy; }
 
     virtual bool hasBump() const {return m_texture_bump;}
 
@@ -38,6 +44,9 @@ public:
 	void setKsTexture(shared_ptr<Material> ks_texture) { m_texture_ks = ks_texture; }
 	void setKdTexture(shared_ptr<Material> kd_texture) { m_texture_kd = kd_texture; }
 	void setBumpTexture(shared_ptr<Texture> bump_texture) { m_texture_bump = bump_texture; }
+
+protected:
+	HitInfo bumpHit(HitInfo const &rhit) const;
 
 protected:
 	shared_ptr<Material> m_texture_ka;
@@ -56,6 +65,10 @@ protected:
 
     bool m_indirect;
 	bool m_is_glossy;
+
+	bool m_is_bump_noisy;
+	float m_bump_noise_height;
+	int m_bump_noise_turbulence;
 };
 
 #endif // CSE168_LAMBERT_H_INCLUDED

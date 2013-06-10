@@ -25,70 +25,232 @@ inline Matrix4x4 scale(float x, float y, float z);
 inline Matrix4x4 rotate(float angle, float x, float y, float z);
 } // namespace
 
-void
-makeGlossyScene()
+void makeAllInOneScene()
 {
     g_camera = new Camera;
     g_scene = new Scene;
     g_image = new Image;
 
-    g_image->resize(780, 360);
+    g_image->resize(512, 512);
     
     // set up the camera
-    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.0f));
-    g_camera->setEye(Vector3(0, 2, 2));
-    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_scene->setBGColor(Vector3(0.10f, 0.39f, 0.99f));
+    g_camera->setEye(Vector3(10.5, 7.20, 0.59));
+    g_camera->setLookAt(Vector3(-2.f, 3.2f, 0.f));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-	g_scene->setSamples(100);
+	g_scene->setSamples(1);
 
     // create and place a point light source
     PointLight * light = new PointLight;
-    light->setPosition(Vector3(0, 3, 3));
+    light->setPosition(Vector3(0, 10.0, 0));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(60);
+    light->setWattage(500);
+	light->setBlur(1.0, 0);
     g_scene->addLight(light);
 
-	Phong *material = new Phong(0.0, 0, 0.2);
-	//material->setIndirectLighting(false);
-	//material->setKs(1.0f);
-	//material->setPhong(10000);
-	//material->setGlossy(true);
-	Sphere* sphere = new Sphere();
-	//sphere->setRadius(1);
-	//sphere->setCenter(Vector3(-2.5, 1, 1));
-	//sphere->setMaterial(material);
-	//g_scene->addObject(sphere);
+	Phong* material = new Phong(0.0f, 0.85f, Vector3(0.1, 0.1, 0.15));
+	material->setGlossy(false);
+	material->setPhong(10000);
+	Sphere *sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(1.2);
+	sphere->setCenter(Vector3(-2.f, 1.2f, 0.f));
+	g_scene->addObject(sphere);
+	
+	material = new Phong(0.0f, 0.85f, Vector3(0.1, 0.1, 0.15));
+	material->setTransparency(0.80);
+	material->setRefraction(1.5);
+	material->setGlossy(false);
+	material->setPhong(10000);
+	sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(0.9);
+	sphere->setCenter(Vector3(-5.f, 3.2f, 0.f));
+	g_scene->addObject(sphere);
 
-	material = new Phong(0.0, 0, 0.0);
-	material->setIndirectLighting(false);
-	material->setKs(1.0f);
-	material->setPhong(100);
+
+	material = new Phong(0.0f, 0.85f, Vector3(0.1, 0.15, 0.1));
+	material->setPhong(180);
 	material->setGlossy(true);
 	sphere = new Sphere();
-	sphere->setRadius(10);
-	sphere->setCenter(Vector3(0, 0, 0));
+	sphere->setMaterial(material);
+	sphere->setRadius(0.6);
+	sphere->setCenter(Vector3(0.9f, 6.5f, -2.61f));
+	g_scene->addObject(sphere);
+
+	Matrix4x4 xform;
+	xform.setIdentity();
+	xform *= translate(-12, 5.5, -1.5);
+	xform *= rotate(-90, 0, 1, 0);
+	xform *= scale(0.8, 0.8, 0.8);
+
+	material = new Phong(Vector3(0.60, 0.40, 0.40), 0.40f, 0);
+	material->setGlossy(false);
+	material->setPhong(10000);
+	TriangleMesh *bunny = new TriangleMesh;
+	bunny->load("bunny.obj", xform);
+	addMeshTrianglesToScene(bunny, material);
+
+	material = new Phong(1, 0, 0.2);
+    TriangleMesh *mesh = new TriangleMesh;
+    mesh->load("sponza.obj");
+    addMeshTrianglesToScene(mesh, material);
+
+	xform.setIdentity();
+	xform *= translate(0, 0.8, 0);
+    xform *= scale(10, 10, 10);
+
+	material = new Phong(1, 0, 0.2);
+    TriangleMesh *ocean = new TriangleMesh;
+    ocean->load("Ocean.obj", xform);
+    addMeshTrianglesToScene(ocean, material);
+
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
+
+void makeCornellScene()
+{
+	g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(640, 512);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
+    g_camera->setEye(Vector3(7.28, 2.58, 1));
+    g_camera->setLookAt(Vector3(0.05, 1.6f, -0.8f));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+    g_scene->setSamples(16);
+    g_scene->setCutoffs(0);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(0.5, 3.99, -0.5));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(100);
+    g_scene->addLight(light);
+
+    Phong* material = new Phong(0.9, 0, 0);
+    TriangleMesh * teapot = new TriangleMesh;
+    teapot->load("cornell_2.obj");
+    addMeshTrianglesToScene(teapot, material);
+
+	material = new Phong(0.0f, 0.85f, 0.1f);
+	material->setTransparency(0.4);
+	material->setRefraction(1.5);
+
+	Sphere *sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(1.0f);
+	sphere->setCenter(Vector3(-0.7f, 1.0f, 0.7f));
+	g_scene->addObject(sphere);
+
+	sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(1.0f);
+	sphere->setCenter(Vector3(1.3f, 1.0f, -1.8f));
+	g_scene->addObject(sphere);
+
+
+	// make the top triangle
+	TriangleMesh * floor = new TriangleMesh;
+    floor->createSingleTriangle();
+    floor->setV1(Vector3(-5, 4.05, -5));
+    floor->setV2(Vector3(  0, 4.05,  5));
+    floor->setV3(Vector3( 5, 4.05, -5));
+    floor->setN1(Vector3(0, 1, 0));
+    floor->setN2(Vector3(0, 1, 0));
+    floor->setN3(Vector3(0, 1, 0));
+    
+    Triangle* t = new Triangle;
+    t->setIndex(0);
+    t->setMesh(floor);
+	material = new Phong(0.0, 0, 1);
+	material->setKs(0.13);
+	material->setIndirectLighting(false);
+    t->setMaterial(material); 
+    g_scene->addObject(t);
+
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
+
+void makeNoiseBumpScene()
+{
+    g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(800, 300);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.10f, 0.39f, 0.99f));
+    g_camera->setEye(Vector3(0, 4.5, 1));
+    g_camera->setLookAt(Vector3(0, 1, 1));
+    g_camera->setUp(Vector3(0, 0, 1));
+    g_camera->setFOV(45);
+
+	g_scene->setSamples(256);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(10, 10, 10));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(1500);
+	light->setBlur(1.5f, 0);
+    g_scene->addLight(light);
+
+	light = new PointLight;
+    light->setPosition(Vector3(-10, 10, -10));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(1500);
+	light->setBlur(1.5f, 0);
+    g_scene->addLight(light);
+
+    Phong* material = new Phong(0.0, 0.7, 0.2);
+	material->setTransparency(1.0);
+	material->setRefraction(1.33);
+	material->setBumpNoisy(8, 4);
+	material->setBm(0.40);
+	Sphere* sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(-2.3, 1, 1));
 	sphere->setMaterial(material);
 	g_scene->addObject(sphere);
 
- //   material = new Phong(0.0, 0, 0.2);
-	//material->setIndirectLighting(false);
-	//material->setKs(1.0f);
-	//material->setPhong(100);
-	//material->setGlossy(true);
-	//sphere = new Sphere();
-	//sphere->setRadius(1);
-	//sphere->setCenter(Vector3(2.5, 1, 1));
-	//sphere->setMaterial(material);
-	//g_scene->addObject(sphere);
-    
+	material = new Phong(0.0, 0.7, 0.2);
+	material->setTransparency(1.0);
+	material->setRefraction(1.33);
+	material->setBumpNoisy(8, 4);
+	material->setBm(0.20);
+	sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(0, 1, 1));
+	sphere->setMaterial(material);
+	g_scene->addObject(sphere);
+
+	material = new Phong(0.0, 0.7, 0.2);
+	material->setTransparency(1.0);
+	material->setRefraction(1.33);
+	sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(2.3, 1, 1));
+	sphere->setMaterial(material);
+	g_scene->addObject(sphere);
+ 
+
     // create the floor triangle
     TriangleMesh * floor = new TriangleMesh;
     floor->createSingleTriangle();
-    floor->setV1(Vector3(-10, 0, -10));
-    floor->setV2(Vector3(  0, 0,  10));
-    floor->setV3(Vector3( 10, 0, -10));
+    floor->setV1(Vector3(-50, -5, -50));
+    floor->setV2(Vector3(  0, -5,  50));
+    floor->setV3(Vector3( 50, -5, -50));
     floor->setN1(Vector3(0, 1, 0));
     floor->setN2(Vector3(0, 1, 0));
     floor->setN3(Vector3(0, 1, 0));
@@ -97,10 +259,73 @@ makeGlossyScene()
     t->setIndex(0);
     t->setMesh(floor);
 	material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
-	material->setKs(0);
+	material->setKs(0.13);
 	material->setIndirectLighting(false);
     t->setMaterial(material); 
     g_scene->addObject(t);
+
+    // let objects do pre-calculations if needed
+    g_scene->preCalc();
+}
+
+void
+makeGlossyScene()
+{
+    g_camera = new Camera;
+    g_scene = new Scene;
+    g_image = new Image;
+
+    g_image->resize(512, 512);
+    
+    // set up the camera
+    g_scene->setBGColor(Vector3(0.10f, 0.39f, 0.99f));
+    g_camera->setEye(Vector3(8, 1.5, 1));
+    g_camera->setLookAt(Vector3(0, 2.5, -1));
+    g_camera->setUp(Vector3(0, 1, 0));
+    g_camera->setFOV(45);
+
+	g_scene->setSamples(256);
+
+    // create and place a point light source
+    PointLight * light = new PointLight;
+    light->setPosition(Vector3(0, 10.0, 0));
+    light->setColor(Vector3(1, 1, 1));
+    light->setWattage(300);
+    g_scene->addLight(light);
+
+	
+	Phong* material = new Phong(0.0f, 0.85f, Vector3(0.1, 0.1, 0.15));
+	material->setGlossy(false);
+	material->setPhong(10000);
+	Sphere *sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(0.9);
+	sphere->setCenter(Vector3(0.f, 0.5f, -2.f));
+	g_scene->addObject(sphere);
+	
+	material = new Phong(0.0f, 0.85f, Vector3(0.1, 0.15, 0.1));
+	material->setPhong(170);
+	material->setGlossy(true);
+	sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(0.9);
+	sphere->setCenter(Vector3(0.f, 0.5f, 0.f));
+	g_scene->addObject(sphere);
+
+
+    material = new Phong(0.0f, 0.85f, Vector3(0.15, 0.1, 0.1));
+	material->setPhong(40);
+	material->setGlossy(true);
+	sphere = new Sphere();
+	sphere->setMaterial(material);
+	sphere->setRadius(0.9);
+	sphere->setCenter(Vector3(0.f, 0.5f, 2.f));
+	g_scene->addObject(sphere);
+
+	material = new Phong(1, 0, 0.2);
+    TriangleMesh *mesh = new TriangleMesh;
+    mesh->load("sponza.obj");
+    addMeshTrianglesToScene(mesh, material);
 
     // let objects do pre-calculations if needed
     g_scene->preCalc();
@@ -116,24 +341,24 @@ makeDepthScene()
     g_image->resize(512, 512);
     
     // set up the camera
-    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
-    g_camera->setEye(Vector3(0, 4, 9));
-    g_camera->setLookAt(Vector3(0, 0, 0));
+    g_scene->setBGColor(Vector3(0.10f, 0.39f, 0.99f));
+    g_camera->setEye(Vector3(0.08, 3.27, 5.61));
+    g_camera->setLookAt(Vector3(0, 1, 2));
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-	g_scene->setSamples(100);
-	g_scene->setDepthOfField(8.f, 0.3f);
+	g_scene->setSamples(256);
+	g_scene->setDepthOfField(5.f, 0.25f);
 
     // create and place a point light source
     PointLight * light = new PointLight;
     light->setPosition(Vector3(10, 10, 10));
     light->setColor(Vector3(1, 1, 1));
-    light->setWattage(600);
+    light->setWattage(1800);
+	light->setBlur(1.5f, 0);
     g_scene->addLight(light);
 
     Phong* material = new Phong(0.0, 0, 0.2);
-	material->setIndirectLighting(false);
 	material->setKs(0.5);
 	Sphere* sphere = new Sphere();
 	sphere->setRadius(1);
@@ -143,8 +368,7 @@ makeDepthScene()
 
 	material = new Phong(Vector3(0.2, 0.2, 0.7), 0, 0.2);
 	material->setRefraction(1.4);
-    material->setTransparency(0.6);
-	material->setIndirectLighting(false);
+    material->setTransparency(0.7);
 	material->setKs(0.3);
 	sphere = new Sphere();
 	sphere->setRadius(1);
@@ -153,20 +377,29 @@ makeDepthScene()
 	g_scene->addObject(sphere);
 
 	material = new Phong(Vector3(0.9, 0.1, 0.2), 0, 0.2);
-	material->setIndirectLighting(false);
-	material->setKs(0.3);
+	material->setKs(0.2);
 	sphere = new Sphere();
 	sphere->setRadius(1);
-	sphere->setCenter(Vector3(3, 1, -4));
+	sphere->setCenter(Vector3(3, 1, -6));
 	sphere->setMaterial(material);
 	g_scene->addObject(sphere);
-    
+ 
+	material = new Phong(Vector3(0.2, 0.2, 0.7), 0, 0.2);
+	material->setRefraction(1.4);
+    material->setTransparency(0.7);
+	material->setKs(0.8);
+	sphere = new Sphere();
+	sphere->setRadius(1);
+	sphere->setCenter(Vector3(3, 1, 6));
+	sphere->setMaterial(material);
+	g_scene->addObject(sphere);
+
     // create the floor triangle
     TriangleMesh * floor = new TriangleMesh;
     floor->createSingleTriangle();
-    floor->setV1(Vector3(-10, 0, -10));
-    floor->setV2(Vector3(  0, 0,  10));
-    floor->setV3(Vector3( 10, 0, -10));
+    floor->setV1(Vector3(-20, 0, -20));
+    floor->setV2(Vector3(  0, 0,  20));
+    floor->setV3(Vector3( 20, 0, -20));
     floor->setN1(Vector3(0, 1, 0));
     floor->setN2(Vector3(0, 1, 0));
     floor->setN3(Vector3(0, 1, 0));
@@ -175,7 +408,7 @@ makeDepthScene()
     t->setIndex(0);
     t->setMesh(floor);
 	material = new Phong(shared_ptr<Material>(new CellularStoneTexture(0.25)), 0.2);
-	material->setKs(0.2);
+	material->setKs(0.13);
 	material->setIndirectLighting(false);
     t->setMaterial(material); 
     g_scene->addObject(t);
@@ -191,7 +424,7 @@ makeFinalScene()
     g_scene = new Scene;
     g_image = new Image;
 
-    g_image->resize(1680, 1050);
+    g_image->resize(512, 512);
     
     // set up the camera
     g_scene->setBGColor(Vector3(1, 1, 1));
@@ -201,7 +434,7 @@ makeFinalScene()
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-    g_scene->setSamples(100);
+    g_scene->setSamples(24);
     g_scene->setCutoffs(0);
 
     // point light in the cave
@@ -250,132 +483,36 @@ makeFinalScene()
 	float y_1 = 15;
 	float y_2 = 24;
 
-
-	//1
 	light = new PointLight;
     light->setPosition(Vector3(x_1, y_2, 125.5));
     light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
     light->setWattage(light_watt * 0.1);
     g_scene->addLight(light);
 
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_2, 125.6));
- //   light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
- //   light->setWattage(light_watt * 0.1);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_1, y_1, 125.5));
- //   light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
- //   light->setWattage(light_watt * 0.1);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_1, 125.6));
- //   light->setColor(Vector3(0.3377f, 0.3019f, 0.0627f));
- //   light->setWattage(light_watt * 0.1);
- //   g_scene->addLight(light);
-
-	//2
 	light = new PointLight;
     light->setPosition(Vector3(x_1, y_2, 53));
     light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
     light->setWattage(light_watt * 0.25);
     g_scene->addLight(light);
 
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_2, 53));
- //   light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_1, y_1, 53));
- //   light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_1, 53));
- //   light->setColor(Vector3(0.8156f, 0.7843f, 0.7294f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//3
 	light = new PointLight;
     light->setPosition(Vector3(x_1, y_2, -19));
     light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
     light->setWattage(light_watt * 0.25);
     g_scene->addLight(light);
 
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_2, -19));
- //   light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_1, y_1, -19));
- //   light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_1, -19));
- //   light->setColor(Vector3(0.7921f, 0.7137f, 0.3960f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//4
 	light = new PointLight;
     light->setPosition(Vector3(x_1, y_2, -91));
     light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
     light->setWattage(light_watt * 0.25);
     g_scene->addLight(light);
 
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_2, -91));
- //   light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_1, y_1, -91));
- //   light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_1, -91));
- //   light->setColor(Vector3(0.6627f, 0.8313f, 0.9254f));
- //   light->setWattage(light_watt * 0.25);
- //   g_scene->addLight(light);
-
-	//5
 	light = new PointLight;
     light->setPosition(Vector3(x_1, y_2, -163));
     light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
     light->setWattage(light_watt * 0.55);
     g_scene->addLight(light);
 
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_2, -163));
- //   light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
- //   light->setWattage(light_watt * 0.55);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_1, y_1, -163));
- //   light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
- //   light->setWattage(light_watt * 0.55);
- //   g_scene->addLight(light);
-
-	//light = new PointLight;
- //   light->setPosition(Vector3(x_2, y_1, -163));
- //   light->setColor(Vector3(0.8470f, 0.9960f, 0.9607f));
- //   light->setWattage(light_watt * 0.55);
- //   g_scene->addLight(light);
-    // let objects do pre-calculations if needed
     g_scene->preCalc();
 }
 
@@ -522,7 +659,7 @@ makeBunny1Scene()
     g_image->resize(512, 512);
     
     // set up the camera
-    g_scene->setBGColor(Vector3(0.0f, 0.0f, 0.2f));
+	g_scene->setBGColor(Vector3(0.10f, 0.39f, 0.99f));
     g_camera->setEye(Vector3(0, 5, 15));
     g_camera->setLookAt(Vector3(0, 0, 0));
     g_camera->setUp(Vector3(0, 1, 0));
