@@ -9,7 +9,7 @@
 
 Scene * g_scene = 0;
 
-Scene::Scene()  : m_bgColor(0.f), m_global_photons(0), m_caustics_photons(500000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
+Scene::Scene()  : m_bgColor(0.f), m_global_photons(400000), m_caustics_photons(400000), m_samples(1), m_cutoffs(0), m_focus_length(-1.f), m_lens(0.25f) {}
 
 void
 Scene::openGL(Camera *cam)

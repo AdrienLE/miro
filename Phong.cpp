@@ -292,7 +292,7 @@ Phong::shade(const Ray& ray, const HitInfo& rhit, const Scene& scene) const
     }
 
     float caustic[3] = {0, 0, 0};
-    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 1.5f, 800); // TODO: customize these parameters
+    g_caustics_map->irradiance_estimate(caustic, bm_hit.P.array(), bm_hit.N.array(), 3.0f, 200); // TODO: customize these parameters
     Vector3 caustic_color(caustic);
     L += caustic_color;
 

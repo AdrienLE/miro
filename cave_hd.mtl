@@ -1,0 +1,48 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 03.06.2013 14:00:10
+
+newmtl walls
+	Ns 91.000000
+	Ni 1.500000
+	d 1.000000
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.999999 0.999999 0.999999
+	map_Ka maps_hd\Map__5_Mix.jpg
+	map_Kd maps_hd\Map__5_Mix.jpg
+	map_bump -bm 0.150000 maps_hd\Map__7_Noise.jpg
+
+newmtl walls_2
+	Ns 100.000000
+	Ni 1.500000
+	d 1.000000
+	illum 2
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.588235 0.588235 0.588235
+	Ks 0.908000 0.908000 0.908000
+	map_Ka maps_hd\Map__5_Mix.jpg
+	map_Kd maps_hd\Map__5_Mix.jpg
+	map_bump -bm 0.150000 maps_hd\Map__7_Noise.jpg
+
+newmtl floor
+	Ns 80.000000
+	Ni 1.500000
+	d 1.000000
+	illum 2
+	Ka 0.528235 0.528235 0.528235
+	Kd 0.528235 0.528235 0.528235
+	Ks 0.848000 0.848000 0.848000
+	map_Ka maps_hd\Map__4_Mix.jpg
+	map_Kd maps_hd\Map__4_Mix.jpg
+	map_bump -bm 0.200000 maps_hd\Map__11_Noise.jpg
+
+newmtl wire_088143225
+	Ni 1.330000
+	Ns 107
+	d 0.200000
+	illum 2
+	Ka 0.000000 0.000000 0.000000
+	Kd 0.000000 0.000000 0.000000
+	Ks 0.230000 0.120000 0.640000
+	map_bump -bm 0.100000 maps_hd\Map__6_Noise.jpg

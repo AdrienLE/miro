@@ -31,7 +31,7 @@ void makeAllInOneScene()
     g_scene = new Scene;
     g_image = new Image;
 
-    g_image->resize(512, 512);
+    g_image->resize(512, 440);
     
     // set up the camera
     g_scene->setBGColor(Vector3(0.10f, 0.39f, 0.99f));
@@ -40,7 +40,7 @@ void makeAllInOneScene()
     g_camera->setUp(Vector3(0, 1, 0));
     g_camera->setFOV(45);
 
-	g_scene->setSamples(1);
+	g_scene->setSamples(512);
 
     // create and place a point light source
     PointLight * light = new PointLight;
